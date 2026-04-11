@@ -59,13 +59,9 @@ class Innings extends HiveObject {
   }
 
   int get extras => allBalls.fold(0, (sum, ball) {
-    var ballExtras = 0;
-    if (ball.isWide || ball.isNoBall) {
-      ballExtras += 1;
-    }
-    if (ball.isBye || ball.isLegBye) {
-      ballExtras += ball.runsScored;
-    }
+    final ballExtras = (ball.isWide || ball.isNoBall)
+        ? 1 + ((ball.isBye || ball.isLegBye) ? ball.runsScored : 0)
+        : ((ball.isBye || ball.isLegBye) ? ball.runsScored : 0);
     return sum + ballExtras;
   });
 
