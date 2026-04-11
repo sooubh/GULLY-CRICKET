@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../features/ads/widgets/banner_ad_widget.dart';
 import '../features/match_setup/presentation/match_setup_screen.dart';
 import '../features/match_setup/presentation/rules_config_screen.dart';
 import '../features/multiplayer/presentation/host_lobby_screen.dart';
@@ -67,14 +68,16 @@ final GoRouter appRouter = GoRouter(
 );
 
 class _RoutePlaceholder extends StatelessWidget {
-  const _RoutePlaceholder(this.label);
+  const _RoutePlaceholder(this.label, {this.showBanner = false});
 
   final String label;
+  final bool showBanner;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(child: Text(label)),
+      bottomNavigationBar: showBanner ? const SafeArea(top: false, child: BannerAdWidget()) : null,
     );
   }
 }
@@ -83,7 +86,7 @@ class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) => const _RoutePlaceholder('HomeScreen');
+  Widget build(BuildContext context) => const _RoutePlaceholder('HomeScreen', showBanner: true);
 }
 
 class MatchHistoryScreen extends StatelessWidget {
@@ -91,5 +94,5 @@ class MatchHistoryScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) =>
-      const _RoutePlaceholder('MatchHistoryScreen');
+      const _RoutePlaceholder('MatchHistoryScreen', showBanner: true);
 }
