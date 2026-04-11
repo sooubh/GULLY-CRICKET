@@ -29,7 +29,7 @@ class BallTimeline extends StatelessWidget {
                 .map((ball) => _BallChip(ball: ball, key: ValueKey<String>(ball.id)))
                 .toList()
                 .animate(interval: 40.ms)
-                .slideX(begin: 1, end: 0, duration: 220.ms, curve: Curves.easeOutCubic),
+                .slideX(begin: 1.0, end: 0.0, duration: 300.ms, curve: Curves.easeOutCubic),
           ),
         ],
       ),

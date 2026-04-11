@@ -41,43 +41,21 @@ class SpectatorScreen extends ConsumerWidget {
           return SafeArea(
             child: Column(
               children: <Widget>[
-                Container(
-                  width: double.infinity,
-                  color: AppColors.surfaceVariant,
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  child: const Text('Connected to host'),
-                ),
                 StreamBuilder<bool>(
                   stream: client.connectionStatus,
                   initialData: client.isConnected,
                   builder: (context, state) {
-                    if (state.data == true) return const SizedBox.shrink();
-                    return Container(
-                      width: double.infinity,
-                      color: Colors.orange.shade900,
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    final connected = state.data ?? false;
+                    return Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
                       child: Row(
                         children: <Widget>[
-                          const SizedBox(
-                            width: 14,
-                            height: 14,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                          const SizedBox(width: 8),
-                          const Text('⚠️ Reconnecting...'),
+                          const Spacer(),
+                          _ConnectionStatusPill(connected: connected),
                         ],
                       ),
                     );
                   },
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
-                  child: Row(
-                    children: <Widget>[
-                      const Spacer(),
-                      const _LiveViewBadge(),
-                    ],
-                  ),
                 ),
                 ScoreboardHeader(match: match, innings: innings),
                 Padding(
@@ -117,15 +95,19 @@ class SpectatorScreen extends ConsumerWidget {
   }
 }
 
-class _LiveViewBadge extends StatelessWidget {
-  const _LiveViewBadge();
+class _ConnectionStatusPill extends StatelessWidget {
+  const _ConnectionStatusPill({required this.connected});
+
+  final bool connected;
 
   @override
   Widget build(BuildContext context) {
+    final background = connected ? AppColors.primaryGreen : AppColors.wicketRed;
+    final label = connected ? 'LIVE' : 'RECONNECTING';
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: AppColors.surfaceVariant,
+        color: background,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -134,12 +116,21 @@ class _LiveViewBadge extends StatelessWidget {
           Container(
             width: 8,
             height: 8,
-            decoration: const BoxDecoration(color: Colors.redAccent, shape: BoxShape.circle),
+            decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
           )
-              .animate(onPlay: (controller) => controller.repeat())
-              .fade(begin: 0.3, end: 1, duration: 700.ms),
+              .animate(onPlay: connected ? (controller) => controller.repeat() : null)
+              .then(delay: 1.seconds)
+              .fadeIn(duration: 280.ms)
+              .fadeOut(duration: 280.ms),
           const SizedBox(width: 8),
-          const Text('👁 LIVE VIEW'),
+          Text(
+            '● $label',
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+              fontSize: 12,
+            ),
+          ),
         ],
       ),
     );

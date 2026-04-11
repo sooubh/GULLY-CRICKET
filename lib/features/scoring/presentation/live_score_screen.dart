@@ -1,12 +1,17 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../core/constants/hive_keys.dart';
 import '../../../core/constants/match_status.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../audio/sound_service.dart';
 import '../../multiplayer/services/host_service.dart';
 import '../domain/engines/match_engine.dart';
 import '../domain/engines/rule_engine.dart';
@@ -36,8 +41,14 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen> {
   static const MatchEngine _matchEngine = MatchEngine();
   bool _undoArmed = false;
   Timer? _undoTimer;
+  Timer? _celebrationTimer;
+  Timer? _wicketFlashTimer;
   bool _bootstrapped = false;
   bool _sheetOpen = false;
+  String? _celebrationText;
+  Color _celebrationColor = Colors.white;
+  double _celebrationFontSize = 48;
+  bool _showWicketFlash = false;
 
   @override
   void initState() {
@@ -48,6 +59,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen> {
   @override
   void dispose() {
     _undoTimer?.cancel();
+    _celebrationTimer?.cancel();
+    _wicketFlashTimer?.cancel();
     super.dispose();
   }
 
@@ -76,15 +89,18 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen> {
   }
 
   Future<void> _handleRun(int runs) async {
-    if (runs == 4 || runs == 6) {
-      await HapticFeedback.mediumImpact();
+    final updated = await _recordStandardDelivery(runs: runs);
+    if (updated == null) return;
+    if (runs == 6) {
+      await _triggerSixCelebration();
+    } else if (runs == 4) {
+      await _triggerFourCelebration();
     } else {
       await HapticFeedback.selectionClick();
     }
-    await _recordStandardDelivery(runs: runs);
   }
 
-  Future<void> _recordStandardDelivery({
+  Future<MatchModel?> _recordStandardDelivery({
     int runs = 0,
     bool isWide = false,
     bool isNoBall = false,
@@ -92,17 +108,17 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen> {
     bool isLegBye = false,
   }) async {
     final match = ref.read(activeMatchProvider);
-    if (match == null) return;
+    if (match == null) return null;
     final ready = await _ensureReadyForBall(match);
-    if (!ready) return;
+    if (!ready) return null;
     final current = ref.read(activeMatchProvider);
-    if (current == null) return;
+    if (current == null) return null;
     final innings = current.currentInnings;
-    if (innings == null) return;
+    if (innings == null) return null;
 
     final batsmanId = innings.currentBatsmanId;
     final bowlerId = innings.currentBowlerId;
-    if (batsmanId == null || bowlerId == null) return;
+    if (batsmanId == null || bowlerId == null) return null;
 
     final ball = _buildBall(
       match: current,
@@ -115,11 +131,10 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen> {
       isBye: isBye,
       isLegBye: isLegBye,
     );
-    await _recordAndHandleFlow(ball: ball, preMatch: current, facedBatsmanId: batsmanId);
+    return _recordAndHandleFlow(ball: ball, preMatch: current, facedBatsmanId: batsmanId);
   }
 
   Future<void> _handleOut() async {
-    await HapticFeedback.heavyImpact();
     final match = ref.read(activeMatchProvider);
     if (match == null) return;
     final ready = await _ensureReadyForBall(match);
@@ -161,9 +176,74 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen> {
       preMatch: current,
       facedBatsmanId: batsmanId,
     );
+    await _triggerWicketCelebration();
     if (updated?.currentInnings?.isCompleted != true) {
       await _selectNextBatsman(striker: true);
     }
+  }
+
+  void _showCelebration({
+    required String text,
+    required Color color,
+    required double fontSize,
+    required Duration duration,
+  }) {
+    _celebrationTimer?.cancel();
+    if (!mounted) return;
+    setState(() {
+      _celebrationText = text;
+      _celebrationColor = color;
+      _celebrationFontSize = fontSize;
+    });
+    _celebrationTimer = Timer(duration, () {
+      if (!mounted) return;
+      setState(() => _celebrationText = null);
+    });
+  }
+
+  Future<void> _triggerFourCelebration() async {
+    _showCelebration(
+      text: 'FOUR! 🏏',
+      color: AppColors.primaryGreen,
+      fontSize: 48,
+      duration: const Duration(milliseconds: 1500),
+    );
+    await HapticFeedback.mediumImpact();
+    await ref.read(soundServiceProvider).playFour();
+  }
+
+  Future<void> _triggerSixCelebration() async {
+    _showCelebration(
+      text: 'SIX! 💥',
+      color: AppColors.accentGold,
+      fontSize: 60,
+      duration: const Duration(milliseconds: 2000),
+    );
+    await ref.read(soundServiceProvider).playSix();
+    for (var i = 0; i < 3; i++) {
+      await HapticFeedback.heavyImpact();
+      if (i < 2) {
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+      }
+    }
+  }
+
+  Future<void> _triggerWicketCelebration() async {
+    _wicketFlashTimer?.cancel();
+    if (!mounted) return;
+    setState(() => _showWicketFlash = true);
+    _wicketFlashTimer = Timer(const Duration(milliseconds: 200), () {
+      if (!mounted) return;
+      setState(() => _showWicketFlash = false);
+    });
+    _showCelebration(
+      text: 'OUT! 🎯',
+      color: AppColors.wicketRed,
+      fontSize: 52,
+      duration: const Duration(milliseconds: 1500),
+    );
+    await HapticFeedback.heavyImpact();
+    await ref.read(soundServiceProvider).playWicket();
   }
 
   Future<void> _handleUndo() async {
@@ -549,8 +629,10 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen> {
         ),
       ),
       body: SafeArea(
-        child: Column(
+        child: Stack(
           children: <Widget>[
+            Column(
+              children: <Widget>[
             Padding(
               padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
               child: Row(
@@ -638,7 +720,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen> {
                 ),
               ),
             ),
-            QuickActionBar(
+                QuickActionBar(
               partnership: partnershipText,
               onSwap: () async {
                 final strikerId = innings.currentBatsmanId;
@@ -652,20 +734,64 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen> {
                   context: context,
                   showDragHandle: true,
                   builder: (context) => SafeArea(
-                    child: ListView(
-                      shrinkWrap: true,
-                      children: <Widget>[
-                        const ListTile(title: Text('Match Settings')),
-                        ListTile(title: Text('Overs: ${match.rules.totalOvers}')),
-                        ListTile(title: Text('Balls/Over: ${match.rules.ballsPerOver}')),
-                        ListTile(title: Text('Players: ${match.rules.totalPlayers}')),
-                      ],
+                    child: ValueListenableBuilder<Box<dynamic>>(
+                      valueListenable:
+                          Hive.box<dynamic>(
+                            HiveKeys.settingsBox,
+                          ).listenable(keys: const <String>['sound_enabled']),
+                      builder: (context, settings, _) {
+                        final soundEnabled =
+                            (settings.get('sound_enabled', defaultValue: true) as bool?) ?? true;
+                        return ListView(
+                          shrinkWrap: true,
+                          children: <Widget>[
+                            const ListTile(title: Text('Match Settings')),
+                            ListTile(title: Text('Overs: ${match.rules.totalOvers}')),
+                            ListTile(title: Text('Balls/Over: ${match.rules.ballsPerOver}')),
+                            ListTile(title: Text('Players: ${match.rules.totalPlayers}')),
+                            SwitchListTile(
+                              title: const Text('Sound Effects'),
+                              value: soundEnabled,
+                              onChanged: (value) async {
+                                await ref.read(soundServiceProvider).setEnabled(value);
+                              },
+                            ),
+                          ],
+                        );
+                      },
                     ),
                   ),
                 );
               },
               onWifi: _showWifiInfo,
             ),
+              ],
+            ),
+            if (_showWicketFlash)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: Container(color: AppColors.wicketRed.withOpacity(0.1)),
+                ),
+              ),
+            if (_celebrationText != null)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: Center(
+                    child: Text(
+                      _celebrationText!,
+                      style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                            color: _celebrationColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: _celebrationFontSize,
+                          ),
+                    )
+                        .animate(key: ValueKey<String>(_celebrationText!))
+                        .fadeIn(duration: 120.ms)
+                        .then(delay: 900.ms)
+                        .fadeOut(duration: 350.ms),
+                  ),
+                ),
+              ),
           ],
         ),
       ),

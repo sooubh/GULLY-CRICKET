@@ -9,6 +9,7 @@ import '../../../core/constants/match_status.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../ads/ad_service.dart';
 import '../../ads/widgets/banner_ad_widget.dart';
+import '../../audio/sound_service.dart';
 import '../../scoring/domain/models/ball_model.dart';
 import '../../scoring/domain/models/innings_model.dart';
 import '../../scoring/domain/models/match_model.dart';
@@ -36,6 +37,9 @@ class _ResultScreenState extends ConsumerState<ResultScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await ref.read(adServiceProvider).showInterstitial();
+      if (!widget.readOnly) {
+        await ref.read(soundServiceProvider).playCrowd();
+      }
     });
   }
 
@@ -205,7 +209,14 @@ class _WinBanner extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
-                    const Text('🏆', style: TextStyle(fontSize: 64)),
+                    const Text('🏆', style: TextStyle(fontSize: 64))
+                        .animate()
+                        .scale(
+                          begin: const Offset(0, 0),
+                          end: const Offset(1, 1),
+                          curve: Curves.elasticOut,
+                          duration: 650.ms,
+                        ),
                     const SizedBox(height: 8),
                     Text(
                       match.winnerTeamName ?? 'Match Tied',
@@ -215,7 +226,7 @@ class _WinBanner extends StatelessWidget {
                             color: AppColors.accentGold,
                             fontWeight: FontWeight.w700,
                           ),
-                    ),
+                    ).animate().shimmer(color: AppColors.accentGold, duration: 900.ms),
                     const SizedBox(height: 6),
                     Text(
                       description,
@@ -227,7 +238,7 @@ class _WinBanner extends StatelessWidget {
               ),
             ),
           ],
-        ),
+        ).animate().shimmer(color: Colors.white24, duration: 1200.ms),
       ),
     );
   }

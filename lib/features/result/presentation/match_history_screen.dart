@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../ads/widgets/banner_ad_widget.dart';
 import '../../scoring/domain/models/match_model.dart';
 import '../../storage/services/match_repository.dart';
+import '../../../shared/widgets/offline_mode_banner.dart';
 import '../widgets/match_history_tile.dart';
 
 class MatchHistoryScreen extends ConsumerWidget {
@@ -42,43 +43,50 @@ class MatchHistoryScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: matches.isEmpty
-          ? const _HistoryEmptyState()
-          : ListView.separated(
-              itemCount: matches.length,
-              separatorBuilder: (_, _) => const Divider(height: 0),
-              itemBuilder: (context, index) {
-                final match = matches[index];
-                return MatchHistoryTile(
-                  match: match,
-                  onTap: () => context.push(
-                    '/result',
-                    extra: <String, dynamic>{'match': match, 'readOnly': true},
+      body: Column(
+        children: <Widget>[
+          const OfflineModeBanner(),
+          Expanded(
+            child: matches.isEmpty
+                ? const _HistoryEmptyState()
+                : ListView.separated(
+                    itemCount: matches.length,
+                    separatorBuilder: (_, _) => const Divider(height: 0),
+                    itemBuilder: (context, index) {
+                      final match = matches[index];
+                      return MatchHistoryTile(
+                        match: match,
+                        onTap: () => context.push(
+                          '/result',
+                          extra: <String, dynamic>{'match': match, 'readOnly': true},
+                        ),
+                        onLongPress: () async {
+                          final confirm = await showDialog<bool>(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('Delete match?'),
+                              content: Text('${match.team1Name} vs ${match.team2Name}'),
+                              actions: <Widget>[
+                                TextButton(
+                                  onPressed: () => Navigator.of(context).pop(false),
+                                  child: const Text('Cancel'),
+                                ),
+                                TextButton(
+                                  onPressed: () => Navigator.of(context).pop(true),
+                                  child: const Text('Delete'),
+                                ),
+                              ],
+                            ),
+                          );
+                          if (confirm != true) return;
+                          await ref.read(matchListProvider.notifier).deleteMatch(match.id);
+                        },
+                      );
+                    },
                   ),
-                  onLongPress: () async {
-                    final confirm = await showDialog<bool>(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: const Text('Delete match?'),
-                        content: Text('${match.team1Name} vs ${match.team2Name}'),
-                        actions: <Widget>[
-                          TextButton(
-                            onPressed: () => Navigator.of(context).pop(false),
-                            child: const Text('Cancel'),
-                          ),
-                          TextButton(
-                            onPressed: () => Navigator.of(context).pop(true),
-                            child: const Text('Delete'),
-                          ),
-                        ],
-                      ),
-                    );
-                    if (confirm != true) return;
-                    await ref.read(matchListProvider.notifier).deleteMatch(match.id);
-                  },
-                );
-              },
-            ),
+          ),
+        ],
+      ),
       bottomNavigationBar: const SafeArea(top: false, child: BannerAdWidget()),
     );
   }
