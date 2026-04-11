@@ -13,25 +13,29 @@ class ClientService {
   StreamSubscription<dynamic>? _subscription;
   final StreamController<MatchModel> _matchUpdatesController =
       StreamController<MatchModel>.broadcast();
+  final StreamController<bool> _connectionStatusController = StreamController<bool>.broadcast();
   bool _isConnected = false;
   bool _manualDisconnect = false;
   bool _reconnectInProgress = false;
   String? _hostIp;
   int _port = AppConstants.wsPort;
+  String _path = AppConstants.wsPath;
 
   Stream<MatchModel> get matchUpdates => _matchUpdatesController.stream;
+  Stream<bool> get connectionStatus => _connectionStatusController.stream;
   bool get isConnected => _isConnected;
 
-  Future<void> connect(String hostIp, int port) async {
+  Future<void> connect(String hostIp, int port, [String? path]) async {
     _hostIp = hostIp;
     _port = port;
+    if (path != null && path.isNotEmpty) _path = path;
     _manualDisconnect = false;
     await _connectWithRetry();
   }
 
   Future<void> disconnect() async {
     _manualDisconnect = true;
-    _isConnected = false;
+    _setConnection(false);
     await _subscription?.cancel();
     _subscription = null;
     await _channel?.sink.close();
@@ -48,7 +52,7 @@ class ClientService {
           await _connectOnce(_hostIp!, _port);
           return;
         } catch (_) {
-          _isConnected = false;
+          _setConnection(false);
           if (attempt == 3 || _manualDisconnect) return;
           await Future<void>.delayed(const Duration(seconds: 2));
         }
@@ -66,7 +70,7 @@ class ClientService {
       scheme: 'ws',
       host: hostIp,
       port: port,
-      path: AppConstants.wsPath,
+      path: _path,
     );
     final channel = IOWebSocketChannel.connect(uri);
     _channel = channel;
@@ -76,7 +80,7 @@ class ClientService {
       onError: (_) => _handleDisconnect(),
       cancelOnError: true,
     );
-    _isConnected = true;
+    _setConnection(true);
   }
 
   void _handleMessage(dynamic message) {
@@ -97,13 +101,20 @@ class ClientService {
   }
 
   void _handleDisconnect() {
-    _isConnected = false;
+    _setConnection(false);
     if (_manualDisconnect) return;
     unawaited(_connectWithRetry());
   }
 
+  void _setConnection(bool value) {
+    if (_isConnected == value) return;
+    _isConnected = value;
+    _connectionStatusController.add(value);
+  }
+
   Future<void> dispose() async {
     await disconnect();
+    await _connectionStatusController.close();
     await _matchUpdatesController.close();
   }
 }

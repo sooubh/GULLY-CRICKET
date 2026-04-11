@@ -1,12 +1,189 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class SpectatorScreen extends StatelessWidget {
+import '../../../core/theme/app_colors.dart';
+import '../../scoring/domain/models/ball_model.dart';
+import '../../scoring/domain/models/innings_model.dart';
+import '../../scoring/domain/models/match_model.dart';
+import '../../scoring/domain/models/player_model.dart';
+import '../../scoring/presentation/widgets/ball_timeline.dart';
+import '../../scoring/presentation/widgets/scoreboard_header.dart';
+import '../services/client_service.dart';
+
+class SpectatorScreen extends ConsumerWidget {
   const SpectatorScreen({super.key});
 
   @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final client = ref.watch(clientServiceProvider);
+    return Scaffold(
+      body: StreamBuilder<MatchModel>(
+        stream: client.matchUpdates,
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          final match = snapshot.data!;
+          final innings = match.currentInnings;
+          if (innings == null) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          final batting = innings.battingTeamId == 'team1' ? match.team1Players : match.team2Players;
+          final bowling = innings.bowlingTeamId == 'team1' ? match.team1Players : match.team2Players;
+          final striker = _findPlayer(batting, innings.currentBatsmanId);
+          final nonStriker = _findPlayer(batting, innings.currentNonStrikerId);
+          final bowler = _findPlayer(bowling, innings.currentBowlerId);
+          final overBalls = _currentOverBalls(innings);
+
+          return SafeArea(
+            child: Column(
+              children: <Widget>[
+                Container(
+                  width: double.infinity,
+                  color: AppColors.surfaceVariant,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  child: const Text('Connected to host'),
+                ),
+                StreamBuilder<bool>(
+                  stream: client.connectionStatus,
+                  initialData: client.isConnected,
+                  builder: (context, state) {
+                    if (state.data == true) return const SizedBox.shrink();
+                    return Container(
+                      width: double.infinity,
+                      color: Colors.orange.shade900,
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      child: Row(
+                        children: const <Widget>[
+                          SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                          SizedBox(width: 8),
+                          Text('⚠️ Reconnecting...'),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+                  child: Row(
+                    children: <Widget>[
+                      const Spacer(),
+                      _LiveViewBadge(),
+                    ],
+                  ),
+                ),
+                ScoreboardHeader(match: match, innings: innings),
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: <Widget>[
+                      _PlayerLine(
+                        icon: '🟢',
+                        name: '${striker?.name ?? '-'}*',
+                        stats:
+                            '${striker?.runsScored ?? 0}(${striker?.ballsFaced ?? 0})  SR: ${(striker?.strikeRate ?? 0).toStringAsFixed(0)}',
+                      ),
+                      const SizedBox(height: 6),
+                      _PlayerLine(
+                        icon: '🔵',
+                        name: nonStriker?.name ?? '-',
+                        stats:
+                            '${nonStriker?.runsScored ?? 0}(${nonStriker?.ballsFaced ?? 0})  SR: ${(nonStriker?.strikeRate ?? 0).toStringAsFixed(0)}',
+                      ),
+                      const Divider(height: 18),
+                      _PlayerLine(
+                        icon: '🎯',
+                        name: bowler?.name ?? '-',
+                        stats:
+                            '${bowler?.oversBowled ?? 0}.0-${0}-${bowler?.runsConceded ?? 0}-${bowler?.wicketsTaken ?? 0}  Eco: ${(bowler?.economy ?? 0).toStringAsFixed(1)}',
+                      ),
+                    ],
+                  ),
+                ),
+                BallTimeline(balls: overBalls),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _LiveViewBadge extends StatelessWidget {
+  @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: Text('SpectatorScreen')),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceVariant,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Container(
+            width: 8,
+            height: 8,
+            decoration: const BoxDecoration(color: Colors.redAccent, shape: BoxShape.circle),
+          )
+              .animate(onPlay: (controller) => controller.repeat())
+              .fade(begin: 0.3, end: 1, duration: 700.ms),
+          const SizedBox(width: 8),
+          const Text('👁 LIVE VIEW'),
+        ],
+      ),
+    );
+  }
+}
+
+Player? _findPlayer(List<Player> players, String? id) {
+  if (id == null) return null;
+  for (final player in players) {
+    if (player.id == id) return player;
+  }
+  return null;
+}
+
+List<Ball> _currentOverBalls(Innings innings) {
+  if (innings.overs.isEmpty) return const <Ball>[];
+  for (var i = innings.overs.length - 1; i >= 0; i--) {
+    if (innings.overs[i].balls.isNotEmpty) return innings.overs[i].balls;
+  }
+  return const <Ball>[];
+}
+
+class _PlayerLine extends StatelessWidget {
+  const _PlayerLine({
+    required this.icon,
+    required this.name,
+    required this.stats,
+  });
+
+  final String icon;
+  final String name;
+  final String stats;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: <Widget>[
+        Text(icon),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            '$name   $stats',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
     );
   }
 }

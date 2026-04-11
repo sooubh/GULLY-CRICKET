@@ -19,16 +19,21 @@ class HostService {
   Timer? _pingTimer;
   MatchModel? _latestMatch;
   String _hostIp = '0.0.0.0';
+  final StreamController<int> _connectedClientsController = StreamController<int>.broadcast();
 
   String get hostIp => _hostIp;
   bool get isHosting => _server != null;
   int get connectedClients => _clients.length;
-  String get qrData {
+  Stream<int> get connectedClientsStream => _connectedClientsController.stream;
+
+  String get qrData => buildQrData();
+
+  String buildQrData([String? matchId]) {
     return jsonEncode(<String, dynamic>{
-      'hostIp': _hostIp,
+      'ip': _hostIp,
       'port': AppConstants.wsPort,
       'path': AppConstants.wsPath,
-      'matchId': _latestMatch?.id,
+      'matchId': matchId ?? _latestMatch?.id,
     });
   }
 
@@ -52,6 +57,7 @@ class HostService {
     };
 
     _server = await shelf_io.serve(handler, InternetAddress.anyIPv4, AppConstants.wsPort);
+    _connectedClientsController.add(_clients.length);
     _startPing();
   }
 
@@ -76,6 +82,7 @@ class HostService {
       } catch (_) {}
     }
     _clients.clear();
+    _connectedClientsController.add(_clients.length);
 
     await _server?.close(force: true);
     _server = null;
@@ -83,6 +90,7 @@ class HostService {
 
   void _onClientConnected(WebSocketChannel channel) {
     _clients.add(channel);
+    _connectedClientsController.add(_clients.length);
     _broadcast(
       SyncEvent(
         type: SyncEventType.clientJoined,
@@ -143,6 +151,7 @@ class HostService {
 
   void _onClientDisconnected(WebSocketChannel channel) {
     _clients.remove(channel);
+    _connectedClientsController.add(_clients.length);
     _broadcast(
       SyncEvent(
         type: SyncEventType.clientLeft,
@@ -184,6 +193,7 @@ final hostServiceProvider = Provider<HostService>((ref) {
   final service = HostService();
   ref.onDispose(() {
     unawaited(service.stopServer());
+    unawaited(service._connectedClientsController.close());
   });
   return service;
 });
