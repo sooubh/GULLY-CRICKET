@@ -316,6 +316,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen> {
       context,
       bowlers: eligible.isEmpty ? bowling : eligible,
       title: overComplete ? 'Over Complete — Select next bowler' : 'Select bowler',
+      overs: innings.overs,
+      ballsPerOver: match.rules.ballsPerOver,
     );
     _sheetOpen = false;
     if (selected == null) return false;
@@ -428,6 +430,33 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen> {
     return const <Ball>[];
   }
 
+  _BowlerFigures _bowlerFigures(Innings innings, MatchModel match, String? bowlerId) {
+    if (bowlerId == null) {
+      return const _BowlerFigures(
+        oversText: '0.0',
+        maidens: 0,
+        runs: 0,
+        wickets: 0,
+        economy: 0,
+      );
+    }
+    final overs = innings.overs.where((o) => o.bowlerId == bowlerId && o.balls.isNotEmpty).toList();
+    final legalBalls = overs.fold<int>(0, (sum, over) => sum + over.legalBallCount);
+    final runs = overs.fold<int>(0, (sum, over) => sum + over.runsInOver);
+    final wickets = overs.fold<int>(0, (sum, over) => sum + over.wicketsInOver);
+    final maidens =
+        overs.where((over) => over.isComplete(match.rules.ballsPerOver) && over.runsInOver == 0).length;
+    final oversText = '${legalBalls ~/ match.rules.ballsPerOver}.${legalBalls % match.rules.ballsPerOver}';
+    final economy = legalBalls == 0 ? 0 : (runs / legalBalls) * match.rules.ballsPerOver;
+    return _BowlerFigures(
+      oversText: oversText,
+      maidens: maidens,
+      runs: runs,
+      wickets: wickets,
+      economy: economy,
+    );
+  }
+
   Future<void> _showWifiInfo() async {
     final host = ref.read(hostServiceProvider);
     final match = ref.read(activeMatchProvider);
@@ -502,6 +531,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen> {
     final striker = _findPlayer(batting, innings.currentBatsmanId);
     final nonStriker = _findPlayer(batting, innings.currentNonStrikerId);
     final bowler = _findPlayer(bowling, innings.currentBowlerId);
+    final bowlerFigures = _bowlerFigures(innings, match, bowler?.id);
 
     final allBalls = _currentOverBalls(innings);
     final partnership = 'Partner: ${striker?.runsScored ?? 0}(${striker?.ballsFaced ?? 0})';
@@ -568,7 +598,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen> {
                     icon: '🎯',
                     name: bowler?.name ?? 'Select bowler',
                     stats:
-                        '${bowler?.oversBowled ?? 0}.0-${0}-${bowler?.runsConceded ?? 0}-${bowler?.wicketsTaken ?? 0}  Eco: ${(bowler?.economy ?? 0).toStringAsFixed(1)}',
+                        '${bowlerFigures.oversText}-${bowlerFigures.maidens}-${bowlerFigures.runs}-${bowlerFigures.wickets}  Eco: ${bowlerFigures.economy.toStringAsFixed(1)}',
                   ),
                 ],
               ),
@@ -668,4 +698,20 @@ class _PlayerLine extends StatelessWidget {
       ],
     );
   }
+}
+
+class _BowlerFigures {
+  const _BowlerFigures({
+    required this.oversText,
+    required this.maidens,
+    required this.runs,
+    required this.wickets,
+    required this.economy,
+  });
+
+  final String oversText;
+  final int maidens;
+  final int runs;
+  final int wickets;
+  final double economy;
 }
