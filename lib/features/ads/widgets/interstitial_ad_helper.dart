@@ -1,0 +1,3 @@
+class InterstitialAdHelper {
+  const InterstitialAdHelper();
+}

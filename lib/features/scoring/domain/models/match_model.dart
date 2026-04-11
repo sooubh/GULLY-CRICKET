@@ -1,0 +1,3 @@
+class MatchModel {
+  const MatchModel();
+}

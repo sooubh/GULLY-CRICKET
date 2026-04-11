@@ -1,0 +1,3 @@
+class AdService {
+  const AdService();
+}

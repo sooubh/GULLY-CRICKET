@@ -1,0 +1,3 @@
+class PartnershipModel {
+  const PartnershipModel();
+}

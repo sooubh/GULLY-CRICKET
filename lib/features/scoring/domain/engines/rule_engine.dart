@@ -1,0 +1,3 @@
+class RuleEngine {
+  const RuleEngine();
+}

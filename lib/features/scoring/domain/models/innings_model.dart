@@ -1,0 +1,3 @@
+class InningsModel {
+  const InningsModel();
+}

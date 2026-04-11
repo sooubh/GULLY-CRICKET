@@ -1,0 +1,3 @@
+class SyncEvent {
+  const SyncEvent();
+}

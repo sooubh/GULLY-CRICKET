@@ -1,0 +1,3 @@
+class GullyRulesModel {
+  const GullyRulesModel();
+}

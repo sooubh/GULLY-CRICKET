@@ -1,0 +1,3 @@
+class HostService {
+  const HostService();
+}

@@ -1,0 +1,3 @@
+class HiveService {
+  const HiveService();
+}
