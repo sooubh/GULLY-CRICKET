@@ -11,6 +11,8 @@ import '../../scoring/presentation/active_match_provider.dart';
 import '../../storage/services/match_repository.dart';
 import 'match_setup_notifier.dart';
 
+const int _statusLiveFirstInnings = 2;
+
 class RulesConfigScreen extends ConsumerStatefulWidget {
   const RulesConfigScreen({super.key});
 
@@ -119,7 +121,7 @@ class _RulesConfigScreenState extends ConsumerState<RulesConfigScreen> {
       team1Players: team1Players,
       team2Players: team2Players,
       rules: rules,
-      status: 2,
+      status: _statusLiveFirstInnings,
     );
 
     await ref.read(matchListProvider.notifier).saveMatch(match);
