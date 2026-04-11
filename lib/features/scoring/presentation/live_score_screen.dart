@@ -8,6 +8,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../core/constants/match_status.dart';
 import '../../multiplayer/services/host_service.dart';
+import '../domain/engines/match_engine.dart';
 import '../domain/engines/rule_engine.dart';
 import '../domain/models/ball_model.dart';
 import '../domain/models/gully_rules_model.dart';
@@ -32,6 +33,7 @@ class LiveScoreScreen extends ConsumerStatefulWidget {
 class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen> {
   static const Uuid _uuid = Uuid();
   static const RuleEngine _ruleEngine = RuleEngine();
+  static const MatchEngine _matchEngine = MatchEngine();
   bool _undoArmed = false;
   Timer? _undoTimer;
   bool _bootstrapped = false;
@@ -447,13 +449,13 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen> {
     final maidens =
         overs.where((over) => over.isComplete(match.rules.ballsPerOver) && over.runsInOver == 0).length;
     final oversText = '${legalBalls ~/ match.rules.ballsPerOver}.${legalBalls % match.rules.ballsPerOver}';
-    final economy = legalBalls == 0 ? 0 : (runs / legalBalls) * match.rules.ballsPerOver;
+    final economyRate = legalBalls == 0 ? 0 : (runs / legalBalls) * match.rules.ballsPerOver;
     return _BowlerFigures(
       oversText: oversText,
       maidens: maidens,
       runs: runs,
       wickets: wickets,
-      economy: economy,
+      economy: economyRate,
     );
   }
 
@@ -534,7 +536,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen> {
     final bowlerFigures = _bowlerFigures(innings, match, bowler?.id);
 
     final allBalls = _currentOverBalls(innings);
-    final partnership = 'Partner: ${striker?.runsScored ?? 0}(${striker?.ballsFaced ?? 0})';
+    final partnershipInfo = _matchEngine.currentPartnership(innings);
+    final partnershipText = 'Partner: ${partnershipInfo.runs}(${partnershipInfo.balls})';
 
     return Scaffold(
       floatingActionButtonLocation: FloatingActionButtonLocation.endTop,
@@ -636,7 +639,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen> {
               ),
             ),
             QuickActionBar(
-              partnership: partnership,
+              partnership: partnershipText,
               onSwap: () async {
                 final strikerId = innings.currentBatsmanId;
                 final nonId = innings.currentNonStrikerId;
