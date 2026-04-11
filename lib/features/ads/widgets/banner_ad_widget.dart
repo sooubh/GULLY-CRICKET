@@ -84,7 +84,6 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
             return;
           }
           setState(() {
-            _bannerAd = ad as BannerAd;
             _status = AdStatus.loaded;
           });
         },

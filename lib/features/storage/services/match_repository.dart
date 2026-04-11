@@ -6,13 +6,13 @@ import 'hive_service.dart';
 final hiveServiceProvider = Provider<HiveService>((ref) => const HiveService());
 
 final matchListProvider = StateNotifierProvider<MatchRepository, List<MatchModel>>((ref) {
-  final repository = MatchRepository(ref.read(hiveServiceProvider));
-  repository.loadMatches();
-  return repository;
+  return MatchRepository(ref.read(hiveServiceProvider));
 });
 
 class MatchRepository extends StateNotifier<List<MatchModel>> {
-  MatchRepository(this._hiveService) : super(const []);
+  MatchRepository(this._hiveService) : super(const []) {
+    loadMatches();
+  }
 
   final HiveService _hiveService;
 
