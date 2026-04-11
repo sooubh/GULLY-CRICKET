@@ -7,7 +7,7 @@ import '../models/player_model.dart';
 import 'rule_engine.dart';
 
 class MatchEngine {
-  MatchEngine();
+  const MatchEngine();
 
   final RuleEngine _ruleEngine = const RuleEngine();
 
@@ -475,7 +475,10 @@ class MatchEngine {
     // 3) Sum partnership runs from both active batters.
     final runs = partnershipBalls
         .where((b) => b.batsmanId == strikerId || b.batsmanId == nonStrikerId)
-        .fold(0, (sum, b) => sum + b.runsScored);
+        .fold(
+          0,
+          (sum, b) => sum + ((b.isWide || b.isBye || b.isLegBye) ? 0 : b.runsScored),
+        );
 
     // 4) Count legal balls in the same partnership window.
     final balls = partnershipBalls.where((b) => b.isLegalBall).length;
