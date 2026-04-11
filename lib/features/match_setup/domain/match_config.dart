@@ -10,7 +10,7 @@ class MatchConfig {
     this.team2Players = const <String>[],
     this.halfCenturyRetire = true,
     this.centuryRetire = false,
-    this.lastManBatsAlone = false,
+    this.lastManBatsAlone = true,
     this.reEntryAllowed = false,
     this.tipOneHandOut = true,
     this.wallCatchOut = false,

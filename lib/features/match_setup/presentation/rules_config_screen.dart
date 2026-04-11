@@ -110,7 +110,7 @@ class _RulesConfigScreenState extends ConsumerState<RulesConfigScreen> {
       sixIsOut: updated.sixIsOut,
       ballsPerOver: updated.ballsPerOver,
       totalOvers: updated.totalOvers,
-      totalPlayers: updated.team1Players.length,
+      totalPlayers: updated.playersPerSide,
     );
 
     final match = MatchModel(
