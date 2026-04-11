@@ -21,6 +21,7 @@ class HostService {
   String _hostIp = '0.0.0.0';
 
   String get hostIp => _hostIp;
+  bool get isHosting => _server != null;
   int get connectedClients => _clients.length;
   String get qrData {
     return jsonEncode(<String, dynamic>{

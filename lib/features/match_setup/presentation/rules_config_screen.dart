@@ -124,7 +124,7 @@ class _RulesConfigScreenState extends ConsumerState<RulesConfigScreen> {
     );
 
     await ref.read(matchListProvider.notifier).saveMatch(match);
-    ref.read(activeMatchProvider.notifier).state = match;
+    await ref.read(activeMatchProvider.notifier).setMatch(match);
 
     if (updated.enableMultiplayer) {
       await ref.read(hostServiceProvider).startServer(match);
