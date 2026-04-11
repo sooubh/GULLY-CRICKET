@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/ads/widgets/banner_ad_widget.dart';
+import '../features/home/presentation/home_screen.dart';
 import '../features/match_setup/presentation/match_setup_screen.dart';
 import '../features/match_setup/presentation/rules_config_screen.dart';
+import '../features/match_setup/presentation/team_setup_screen.dart';
 import '../features/multiplayer/presentation/host_lobby_screen.dart';
 import '../features/multiplayer/presentation/join_screen.dart';
 import '../features/multiplayer/presentation/spectator_screen.dart';
@@ -28,6 +30,12 @@ final GoRouter appRouter = GoRouter(
       name: 'rules',
       builder: (BuildContext context, GoRouterState state) =>
           const RulesConfigScreen(),
+    ),
+    GoRoute(
+      path: '/teams',
+      name: 'teams',
+      builder: (BuildContext context, GoRouterState state) =>
+          const TeamSetupScreen(),
     ),
     GoRoute(
       path: '/host',
@@ -80,13 +88,6 @@ class _RoutePlaceholder extends StatelessWidget {
       bottomNavigationBar: showBanner ? const SafeArea(top: false, child: BannerAdWidget()) : null,
     );
   }
-}
-
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) => const _RoutePlaceholder('HomeScreen', showBanner: true);
 }
 
 class MatchHistoryScreen extends StatelessWidget {
