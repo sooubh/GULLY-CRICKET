@@ -13,11 +13,15 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
+        child: LayoutBuilder(
+          builder: (context, constraints) => SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
                 const OfflineModeBanner(),
                 const SizedBox(height: 12),
                 Center(
@@ -92,6 +96,17 @@ class HomeScreen extends StatelessWidget {
                     .animate()
                     .slideY(begin: 0.22, end: 0, duration: 300.ms, delay: 300.ms)
                     .fadeIn(delay: 300.ms, duration: 300.ms),
+                const SizedBox(height: 16),
+                SizedBox(
+                  height: 56,
+                  child: OutlinedButton(
+                    onPressed: () => context.go('/players'),
+                    child: const Text('👥 Saved Players'),
+                  ),
+                )
+                    .animate()
+                    .slideY(begin: 0.22, end: 0, duration: 300.ms, delay: 400.ms)
+                    .fadeIn(delay: 400.ms, duration: 300.ms),
                 const Spacer(),
                 const Align(
                   alignment: Alignment.center,
@@ -105,10 +120,13 @@ class HomeScreen extends StatelessWidget {
                     context,
                   ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
                 ),
-              ],
+                  ],
+                ),
+              ),
             ),
           ),
         ),
+      ),
     );
   }
 }

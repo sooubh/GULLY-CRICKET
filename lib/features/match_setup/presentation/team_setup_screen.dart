@@ -18,6 +18,8 @@ class _TeamSetupScreenState extends ConsumerState<TeamSetupScreen> {
   late List<TextEditingController> _team2Controllers;
   late List<bool> _team1SaveToggles;
   late List<bool> _team2SaveToggles;
+  String _team1SearchQuery = '';
+  String _team2SearchQuery = '';
 
   @override
   void initState() {
@@ -158,7 +160,7 @@ class _TeamSetupScreenState extends ConsumerState<TeamSetupScreen> {
       return;
     }
 
-    final savedPlayers = ref.read(savedPlayersServiceProvider);
+    final savedPlayers = ref.read(savedPlayersProvider.notifier);
     for (final entry in _team1Controllers.asMap().entries) {
       if (_team1SaveToggles[entry.key]) {
         await savedPlayers.savePlayer(entry.value.text.trim());
@@ -195,6 +197,8 @@ class _TeamSetupScreenState extends ConsumerState<TeamSetupScreen> {
                   onAddAnother: _addTeam1Player,
                   onRemoveLast: _removeTeam1Player,
                   savedPlayers: savedPlayers,
+                  searchQuery: _team1SearchQuery,
+                  onSearchChanged: (value) => setState(() => _team1SearchQuery = value),
                   onQuickAdd: _quickAddTeam1Player,
                 ),
                 const SizedBox(height: 20),
@@ -206,6 +210,8 @@ class _TeamSetupScreenState extends ConsumerState<TeamSetupScreen> {
                   onAddAnother: _addTeam2Player,
                   onRemoveLast: _removeTeam2Player,
                   savedPlayers: savedPlayers,
+                  searchQuery: _team2SearchQuery,
+                  onSearchChanged: (value) => setState(() => _team2SearchQuery = value),
                   onQuickAdd: _quickAddTeam2Player,
                 ),
                 const SizedBox(height: 20),
@@ -234,6 +240,8 @@ class _TeamSection extends StatelessWidget {
     required this.onAddAnother,
     required this.onRemoveLast,
     required this.savedPlayers,
+    required this.searchQuery,
+    required this.onSearchChanged,
     required this.onQuickAdd,
   });
 
@@ -244,10 +252,16 @@ class _TeamSection extends StatelessWidget {
   final VoidCallback onAddAnother;
   final VoidCallback onRemoveLast;
   final List<SavedPlayer> savedPlayers;
+  final String searchQuery;
+  final ValueChanged<String> onSearchChanged;
   final ValueChanged<SavedPlayer> onQuickAdd;
 
   @override
   Widget build(BuildContext context) {
+    final query = searchQuery.trim().toLowerCase();
+    final filteredPlayers = query.isEmpty
+        ? savedPlayers
+        : savedPlayers.where((player) => player.name.toLowerCase().contains(query)).toList();
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(12),
@@ -263,23 +277,34 @@ class _TeamSection extends StatelessWidget {
               ),
             if (savedPlayers.isNotEmpty) ...<Widget>[
               const SizedBox(height: 10),
+              TextField(
+                onChanged: onSearchChanged,
+                decoration: const InputDecoration(
+                  prefixIcon: Icon(Icons.search),
+                  hintText: 'Search saved players',
+                ),
+              ),
+              const SizedBox(height: 8),
               Text(
                 'Quick add saved players',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
               const SizedBox(height: 6),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: savedPlayers
-                    .map(
-                      (player) => ActionChip(
-                        label: Text(player.name),
-                        avatar: player.isFavorite ? const Icon(Icons.star, size: 16) : null,
-                        onPressed: () => onQuickAdd(player),
-                      ),
-                    )
-                    .toList(),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: filteredPlayers
+                      .map(
+                        (player) => ActionChip(
+                          label: Text(player.name),
+                          avatar: player.isFavorite ? const Icon(Icons.star, size: 16) : null,
+                          onPressed: () => onQuickAdd(player),
+                        ),
+                      )
+                      .toList(),
+                ),
               ),
             ],
             const SizedBox(height: 8),
