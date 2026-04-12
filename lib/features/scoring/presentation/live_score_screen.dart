@@ -151,6 +151,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen> {
     if (data == null) return;
     await OverlayService.showOverlay(data);
     ref.read(overlayActiveProvider.notifier).state = true;
+    // Minimize the app so the floating overlay can be seen above other apps.
     await SystemNavigator.pop();
   }
 
