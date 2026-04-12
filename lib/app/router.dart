@@ -8,6 +8,7 @@ import '../features/match_setup/presentation/match_setup_screen.dart';
 import '../features/match_setup/presentation/rules_config_screen.dart';
 import '../features/match_setup/presentation/team_setup_screen.dart';
 import '../features/multiplayer/presentation/host_lobby_screen.dart';
+import '../features/multiplayer/presentation/hotspot_guide_screen.dart';
 import '../features/multiplayer/presentation/join_screen.dart';
 import '../features/multiplayer/presentation/spectator_screen.dart';
 import '../features/onboarding/presentation/welcome_screen.dart';
@@ -97,6 +98,11 @@ final GoRouter appRouter = GoRouter(
       path: '/join',
       name: 'join',
       builder: (BuildContext context, GoRouterState state) => const JoinScreen(),
+    ),
+    GoRoute(
+      path: '/hotspot-guide',
+      name: 'hotspotGuide',
+      builder: (BuildContext context, GoRouterState state) => const HotspotGuideScreen(),
     ),
     GoRoute(
       path: '/live',

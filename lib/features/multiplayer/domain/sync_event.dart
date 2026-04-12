@@ -1,8 +1,10 @@
 enum SyncEventType {
   matchState,
+  ballRecorded,
   ping,
   clientJoined,
   clientLeft,
+  clientHello,
   error,
 }
 

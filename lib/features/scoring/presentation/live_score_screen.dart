@@ -399,7 +399,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen> {
   }) async {
     final updated = await ref.read(activeMatchProvider.notifier).recordBall(ball);
     if (updated == null) return null;
-    await _broadcastIfHosting();
+    await _broadcastIfHosting(ball: ball);
     final innings = updated.currentInnings;
     if (innings == null) return updated;
 
@@ -617,11 +617,34 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen> {
     );
   }
 
-  Future<void> _broadcastIfHosting() async {
+  Future<void> _broadcastIfHosting({Ball? ball}) async {
     final host = ref.read(hostServiceProvider);
     final match = ref.read(activeMatchProvider);
     if (host.isHosting && match != null) {
-      host.broadcastMatchState(match);
+      if (ball != null) {
+        host.broadcastBallRecorded(ball, match);
+      } else {
+        host.broadcastMatchState(match);
+      }
+    }
+  }
+
+  Future<void> _ensureHotspotGuideAndStartHosting() async {
+    final settings = Hive.box<dynamic>(HiveKeys.settingsBox);
+    final shown = (settings.get('hotspot_guide_shown', defaultValue: false) as bool?) ?? false;
+    if (!shown) {
+      final accepted = await context.push<bool>('/hotspot-guide');
+      if (accepted != true) return;
+    }
+
+    final host = ref.read(hostServiceProvider);
+    final match = ref.read(activeMatchProvider);
+    if (match == null) return;
+    await host.startServer(match);
+    host.broadcastMatchState(match);
+    if (mounted) {
+      Navigator.of(context).pop();
+      _showTopSnackBar('Hosting started at ${host.hostIp}');
     }
   }
 
@@ -963,18 +986,11 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen> {
               children: <Widget>[
                 const Text('Not hosting yet'),
                 const SizedBox(height: 8),
-                ElevatedButton.icon(
-                  onPressed: () async {
-                    await host.startServer(match);
-                    host.broadcastMatchState(match);
-                    if (mounted) {
-                      Navigator.of(context).pop();
-                      _showTopSnackBar('Hosting started at ${host.hostIp}');
-                    }
-                  },
-                  icon: const Icon(Icons.wifi_tethering),
-                  label: const Text('Start Hosting'),
-                ),
+                  ElevatedButton.icon(
+                    onPressed: _ensureHotspotGuideAndStartHosting,
+                    icon: const Icon(Icons.wifi_tethering),
+                    label: const Text('Start Hosting'),
+                  ),
               ],
             ),
           ),

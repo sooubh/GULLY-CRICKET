@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../../core/constants/app_constants.dart';
+import '../../../core/constants/hive_keys.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../scoring/presentation/active_match_provider.dart';
 import '../services/host_service.dart';
@@ -27,6 +29,21 @@ class _HostLobbyScreenState extends ConsumerState<HostLobbyScreen> {
   }
 
   Future<void> _startServer() async {
+    final settings = Hive.box<dynamic>(HiveKeys.settingsBox);
+    final shown = (settings.get('hotspot_guide_shown', defaultValue: false) as bool?) ?? false;
+    if (!shown) {
+      final accepted = await context.push<bool>('/hotspot-guide');
+      if (accepted != true) {
+        if (mounted) {
+          setState(() {
+            _error = 'Hosting cancelled';
+            _starting = false;
+          });
+        }
+        return;
+      }
+    }
+
     final match = ref.read(activeMatchProvider);
     final host = ref.read(hostServiceProvider);
     if (match == null) {

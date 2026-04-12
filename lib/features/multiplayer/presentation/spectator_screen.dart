@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../core/constants/match_status.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../scoring/domain/models/ball_model.dart';
 import '../../scoring/domain/models/innings_model.dart';
@@ -10,16 +12,26 @@ import '../../scoring/domain/models/player_model.dart';
 import '../../scoring/presentation/widgets/ball_timeline.dart';
 import '../../scoring/presentation/widgets/scoreboard_header.dart';
 import '../services/client_service.dart';
+import 'widgets/sync_status_bar.dart';
 
-class SpectatorScreen extends ConsumerWidget {
+class SpectatorScreen extends ConsumerStatefulWidget {
   const SpectatorScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SpectatorScreen> createState() => _SpectatorScreenState();
+}
+
+class _SpectatorScreenState extends ConsumerState<SpectatorScreen> {
+  bool _shownFirstSaveToast = false;
+  String? _savedMatchId;
+
+  @override
+  Widget build(BuildContext context) {
     final client = ref.watch(clientServiceProvider);
     return Scaffold(
       body: StreamBuilder<MatchModel>(
         stream: client.matchUpdates,
+        initialData: client.lastReceivedMatch,
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
@@ -30,6 +42,19 @@ class SpectatorScreen extends ConsumerWidget {
             return const Center(child: CircularProgressIndicator());
           }
 
+          if (!_shownFirstSaveToast && client.hasSavedAnySyncedMatch) {
+            _shownFirstSaveToast = true;
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('💾 Saving to your history')),
+              );
+            });
+          }
+          if (match.status == MatchStatus.completed && _savedMatchId != match.id) {
+            _savedMatchId = match.id;
+          }
+
           final batting = innings.battingTeamId == 'team1' ? match.team1Players : match.team2Players;
           final bowling = innings.bowlingTeamId == 'team1' ? match.team1Players : match.team2Players;
           final striker = _findPlayer(batting, innings.currentBatsmanId);
@@ -37,55 +62,117 @@ class SpectatorScreen extends ConsumerWidget {
           final bowler = _findPlayer(bowling, innings.currentBowlerId);
           final figures = _bowlerFigures(innings, match, bowler?.id);
           final overBalls = _currentOverBalls(innings);
+          final landscape = MediaQuery.of(context).orientation == Orientation.landscape;
+
+          final details = Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: <Widget>[
+                _PlayerLine(
+                  icon: '🟢',
+                  name: '${striker?.name ?? '-'}*',
+                  stats:
+                      '${striker?.runsScored ?? 0}(${striker?.ballsFaced ?? 0})  SR: ${(striker?.strikeRate ?? 0).toStringAsFixed(0)}',
+                ),
+                const SizedBox(height: 6),
+                _PlayerLine(
+                  icon: '🔵',
+                  name: nonStriker?.name ?? '-',
+                  stats:
+                      '${nonStriker?.runsScored ?? 0}(${nonStriker?.ballsFaced ?? 0})  SR: ${(nonStriker?.strikeRate ?? 0).toStringAsFixed(0)}',
+                ),
+                const Divider(height: 18),
+                _PlayerLine(
+                  icon: '🎯',
+                  name: bowler?.name ?? '-',
+                  stats:
+                      '${figures.oversText}-${figures.maidens}-${figures.runs}-${figures.wickets}  Eco: ${figures.economy.toStringAsFixed(1)}',
+                ),
+              ],
+            ),
+          );
+
+          final body = landscape
+              ? Expanded(
+                  child: Row(
+                    children: <Widget>[
+                      Expanded(child: SingleChildScrollView(child: details)),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: BallTimeline(balls: overBalls),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : Column(
+                  children: <Widget>[
+                    details,
+                    BallTimeline(balls: overBalls),
+                  ],
+                );
 
           return SafeArea(
             child: Column(
               children: <Widget>[
-                StreamBuilder<bool>(
-                  stream: client.connectionStatus,
-                  initialData: client.isConnected,
-                  builder: (context, state) {
-                    final connected = state.data ?? false;
-                    return Padding(
-                      padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
-                      child: Row(
-                        children: <Widget>[
-                          const Spacer(),
-                          _ConnectionStatusPill(connected: connected),
-                        ],
-                      ),
+                StreamBuilder<SyncStatusState>(
+                  stream: client.syncStatusUpdates,
+                  initialData: client.syncStatus,
+                  builder: (context, stateSnapshot) {
+                    final status = stateSnapshot.data ?? const SyncStatusState(stage: SyncStage.syncing);
+                    return SyncStatusBar(
+                      status: status,
+                      onRetry: () => client.retryNow(),
                     );
                   },
                 ),
-                ScoreboardHeader(match: match, innings: innings),
                 Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
+                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+                  child: Row(
                     children: <Widget>[
-                      _PlayerLine(
-                        icon: '🟢',
-                        name: '${striker?.name ?? '-'}*',
-                        stats:
-                            '${striker?.runsScored ?? 0}(${striker?.ballsFaced ?? 0})  SR: ${(striker?.strikeRate ?? 0).toStringAsFixed(0)}',
+                      Expanded(
+                        child: Text(
+                          'Hosted by ${client.hostDeviceName ?? 'Host Device'} · ${client.viewerCount} viewers',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
                       ),
-                      const SizedBox(height: 6),
-                      _PlayerLine(
-                        icon: '🔵',
-                        name: nonStriker?.name ?? '-',
-                        stats:
-                            '${nonStriker?.runsScored ?? 0}(${nonStriker?.ballsFaced ?? 0})  SR: ${(nonStriker?.strikeRate ?? 0).toStringAsFixed(0)}',
-                      ),
-                      const Divider(height: 18),
-                      _PlayerLine(
-                        icon: '🎯',
-                        name: bowler?.name ?? '-',
-                        stats:
-                            '${figures.oversText}-${figures.maidens}-${figures.runs}-${figures.wickets}  Eco: ${figures.economy.toStringAsFixed(1)}',
+                      const SizedBox(width: 8),
+                      StreamBuilder<bool>(
+                        stream: client.connectionStatus,
+                        initialData: client.isConnected,
+                        builder: (context, state) {
+                          final connected = state.data ?? false;
+                          return _ConnectionStatusPill(connected: connected);
+                        },
                       ),
                     ],
                   ),
                 ),
-                BallTimeline(balls: overBalls),
+                ScoreboardHeader(match: match, innings: innings),
+                if (_savedMatchId != null)
+                  Material(
+                    color: Colors.green.withOpacity(0.2),
+                    child: InkWell(
+                      onTap: () => context.push('/report/$_savedMatchId'),
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        child: Row(
+                          children: <Widget>[
+                            Expanded(
+                              child: Text(
+                                'Match saved to your history!  View Full Report →',
+                                style: TextStyle(fontWeight: FontWeight.w700),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                if (landscape) body else Expanded(child: SingleChildScrollView(child: body)),
               ],
             ),
           );

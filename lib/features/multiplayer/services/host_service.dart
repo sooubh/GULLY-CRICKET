@@ -10,10 +10,13 @@ import 'package:shelf_web_socket/shelf_web_socket.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 import '../../../core/constants/app_constants.dart';
+import '../../scoring/domain/models/ball_model.dart';
 import '../../scoring/domain/models/match_model.dart';
 import '../domain/sync_event.dart';
 
 class HostService {
+  static const int maxClients = 8;
+
   HttpServer? _server;
   final Set<WebSocketChannel> _clients = <WebSocketChannel>{};
   Timer? _pingTimer;
@@ -66,7 +69,34 @@ class HostService {
     _broadcast(
       SyncEvent(
         type: SyncEventType.matchState,
-        payload: <String, dynamic>{'match': match.toJson()},
+        payload: _matchStatePayload(match),
+        timestamp: DateTime.now().millisecondsSinceEpoch,
+      ),
+    );
+  }
+
+  void broadcastBallRecorded(Ball ball, MatchModel match) {
+    _latestMatch = match;
+    final innings = match.currentInnings;
+    final summary = <String, dynamic>{
+      'score': innings == null ? '0/0' : '${innings.totalRuns}/${innings.wickets}',
+      'wickets': innings?.wickets ?? 0,
+      'overs': innings == null ? '0.0' : _oversText(match),
+    };
+    _broadcast(
+      SyncEvent(
+        type: SyncEventType.ballRecorded,
+        payload: <String, dynamic>{
+          'ball': ball.toJson(),
+          'matchSummary': summary,
+        },
+        timestamp: DateTime.now().millisecondsSinceEpoch,
+      ),
+    );
+    _broadcast(
+      SyncEvent(
+        type: SyncEventType.matchState,
+        payload: _matchStatePayload(match),
         timestamp: DateTime.now().millisecondsSinceEpoch,
       ),
     );
@@ -94,6 +124,18 @@ class HostService {
   }
 
   void _onClientConnected(WebSocketChannel channel) {
+    if (_clients.length >= maxClients) {
+      _sendToClient(
+        channel,
+        SyncEvent(
+          type: SyncEventType.error,
+          payload: const <String, dynamic>{'message': 'Match full. Max 8 viewers.'},
+          timestamp: DateTime.now().millisecondsSinceEpoch,
+        ),
+      );
+      unawaited(channel.sink.close());
+      return;
+    }
     _clients.add(channel);
     _connectedClientsController.add(_clients.length);
     _broadcast(
@@ -106,14 +148,7 @@ class HostService {
 
     final match = _latestMatch;
     if (match != null) {
-      _sendToClient(
-        channel,
-        SyncEvent(
-          type: SyncEventType.matchState,
-          payload: <String, dynamic>{'match': match.toJson()},
-          timestamp: DateTime.now().millisecondsSinceEpoch,
-        ),
-      );
+      _sendFullState(channel, match, isFullSync: true);
     }
 
     channel.stream.listen(
@@ -129,6 +164,11 @@ class HostService {
     try {
       final decoded = jsonDecode(message);
       if (decoded is! Map<String, dynamic>) return;
+      final clientHelloType = decoded['type'] as String?;
+      if (clientHelloType == 'client_hello' || clientHelloType == SyncEventType.clientHello.name) {
+        _handleClientHello(channel, decoded);
+        return;
+      }
       final event = SyncEvent.fromJson(decoded);
       if (event.type != SyncEventType.ping) {
         _sendToClient(
@@ -191,6 +231,76 @@ class HostService {
     } catch (_) {
       _clients.remove(channel);
     }
+  }
+
+  void _handleClientHello(WebSocketChannel channel, Map<String, dynamic> payload) {
+    final match = _latestMatch;
+    if (match == null) return;
+    final lastKnownBallId = payload['lastBallId'] as String?;
+    if (lastKnownBallId == null || lastKnownBallId.isEmpty) {
+      _sendFullState(channel, match, isFullSync: true);
+      return;
+    }
+
+    final allBalls = match.currentInnings?.allBalls ?? const <Ball>[];
+    final index = allBalls.indexWhere((ball) => ball.id == lastKnownBallId);
+    if (index < 0) {
+      _sendFullState(channel, match, isFullSync: true);
+      return;
+    }
+
+    final delta = allBalls.skip(index + 1);
+    final oversText = _oversText(match);
+    for (final ball in delta) {
+      _sendToClient(
+        channel,
+        SyncEvent(
+          type: SyncEventType.ballRecorded,
+          payload: <String, dynamic>{
+            'ball': ball.toJson(),
+            'matchSummary': <String, dynamic>{
+              'score': match.currentInnings == null
+                  ? '0/0'
+                  : '${match.currentInnings!.totalRuns}/${match.currentInnings!.wickets}',
+              'wickets': match.currentInnings?.wickets ?? 0,
+              'overs': oversText,
+            },
+          },
+          timestamp: DateTime.now().millisecondsSinceEpoch,
+        ),
+      );
+    }
+    _sendFullState(channel, match, isFullSync: false);
+  }
+
+  void _sendFullState(WebSocketChannel channel, MatchModel match, {required bool isFullSync}) {
+    _sendToClient(
+      channel,
+      SyncEvent(
+        type: SyncEventType.matchState,
+        payload: <String, dynamic>{
+          ..._matchStatePayload(match),
+          'isFullSync': isFullSync,
+        },
+        timestamp: DateTime.now().millisecondsSinceEpoch,
+      ),
+    );
+  }
+
+  Map<String, dynamic> _matchStatePayload(MatchModel match) {
+    return <String, dynamic>{
+      'match': match.toJson(),
+      'viewerCount': _clients.length,
+      'hostDeviceName': Platform.localHostname,
+    };
+  }
+
+  String _oversText(MatchModel match) {
+    final innings = match.currentInnings;
+    if (innings == null) return '0.0';
+    final legalBalls = innings.legalBallsCount();
+    final ballsPerOver = match.rules.ballsPerOver;
+    return '${legalBalls ~/ ballsPerOver}.${legalBalls % ballsPerOver}';
   }
 }
 
