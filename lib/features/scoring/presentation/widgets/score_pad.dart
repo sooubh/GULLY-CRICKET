@@ -28,7 +28,6 @@ class ScorePad extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final buttonSize = (constraints.maxWidth - 48) / 4;
         const gridChildAspectRatio = 1 / 0.9;
         return SingleChildScrollView(
           child: Padding(
@@ -41,7 +40,7 @@ class ScorePad extends StatelessWidget {
                   physics: const NeverScrollableScrollPhysics(),
                   mainAxisSpacing: 8,
                   crossAxisSpacing: 8,
-                  childAspectRatio: buttonSize <= 0 ? 1 : gridChildAspectRatio,
+                  childAspectRatio: gridChildAspectRatio,
                   children: <Widget>[
                     _PadButton(label: '0', color: AppColors.surfaceVariant, onTap: () => onRun(0)),
                     _PadButton(label: '1', color: AppColors.surfaceVariant, onTap: () => onRun(1)),
