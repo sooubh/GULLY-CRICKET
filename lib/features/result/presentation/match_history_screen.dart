@@ -51,7 +51,7 @@ class MatchHistoryScreen extends ConsumerWidget {
                 ? const _HistoryEmptyState()
                 : ListView.separated(
                     itemCount: matches.length,
-                    separatorBuilder: (_, _) => const Divider(height: 0),
+                    separatorBuilder: (_, __) => const Divider(height: 0),
                     itemBuilder: (context, index) {
                       final match = matches[index];
                       return MatchHistoryTile(

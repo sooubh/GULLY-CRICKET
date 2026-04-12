@@ -172,7 +172,7 @@ _BowlerFigures _bowlerFigures(Innings innings, MatchModel match, String? bowlerI
       .where((over) => over.isComplete(match.rules.ballsPerOver) && over.runsInOver == 0)
       .length;
   final oversText = '${legalBalls ~/ match.rules.ballsPerOver}.${legalBalls % match.rules.ballsPerOver}';
-  final economy = legalBalls == 0 ? 0 : (runs / legalBalls) * match.rules.ballsPerOver;
+  final economy = legalBalls == 0 ? 0.0 : (runs / legalBalls) * match.rules.ballsPerOver;
   return _BowlerFigures(
     oversText: oversText,
     maidens: maidens,

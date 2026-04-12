@@ -55,7 +55,7 @@ class SelectBowlerScreen extends StatelessWidget {
                   ? const Center(child: Text('No eligible bowler'))
                   : ListView.separated(
                       itemCount: bowlers.length,
-                      separatorBuilder: (_, _) => const Divider(height: 1),
+                      separatorBuilder: (_, __) => const Divider(height: 1),
                       itemBuilder: (context, index) {
                         final bowler = bowlers[index];
                         final bowlerOvers = overs

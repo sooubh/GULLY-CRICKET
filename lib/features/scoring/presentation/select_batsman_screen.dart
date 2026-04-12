@@ -53,7 +53,7 @@ class SelectBatsmanScreen extends StatelessWidget {
                   ? const Center(child: Text('No available batsman'))
                   : ListView.separated(
                       itemCount: players.length,
-                      separatorBuilder: (_, _) => const Divider(height: 1),
+                      separatorBuilder: (_, __) => const Divider(height: 1),
                       itemBuilder: (context, index) {
                         final player = players[index];
                         return ListTile(
