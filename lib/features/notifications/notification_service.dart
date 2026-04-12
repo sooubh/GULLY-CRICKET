@@ -10,8 +10,14 @@ class NotificationService {
   static const String eventsChannelName = 'Match Events';
 
   final FlutterLocalNotificationsPlugin _plugin = FlutterLocalNotificationsPlugin();
+  Future<void>? _initialization;
 
   Future<void> initialize() async {
+    _initialization ??= _initializeInternal();
+    await _initialization;
+  }
+
+  Future<void> _initializeInternal() async {
     const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
     const initSettings = InitializationSettings(android: androidSettings);
     await _plugin.initialize(initSettings);
@@ -50,6 +56,7 @@ class NotificationService {
     required String crr,
     required String? rrr,
   }) async {
+    await initialize();
     final title = '$team1Name $team1Score ($team1Overs)'
         '${team2Score != null ? ' vs $team2Score (${team2Overs ?? ''})' : ''}';
     final body = currentEvent.isNotEmpty
@@ -81,6 +88,7 @@ class NotificationService {
   }
 
   Future<void> showMatchEvent(String title, String body) async {
+    await initialize();
     const androidDetails = AndroidNotificationDetails(
       eventsChannelId,
       eventsChannelName,
@@ -99,6 +107,7 @@ class NotificationService {
   }
 
   Future<void> showMatchResult(String winner, String description) async {
+    await initialize();
     const androidDetails = AndroidNotificationDetails(
       eventsChannelId,
       eventsChannelName,
@@ -115,10 +124,12 @@ class NotificationService {
   }
 
   Future<void> cancelLiveScore() async {
+    await initialize();
     await _plugin.cancel(liveScoreNotifId);
   }
 
   Future<void> cancelAll() async {
+    await initialize();
     await _plugin.cancelAll();
   }
 }
