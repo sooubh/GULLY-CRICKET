@@ -598,7 +598,7 @@ class _PlayerAnalysis {
           if (played) {
             final runs = balls.fold<int>(0, (sum, ball) => sum + _battingRuns(ball));
             final faced = balls.where((ball) => ball.isLegalBall).length;
-            final strikeRate = faced == 0 ? 0 : (runs / faced) * 100;
+            final strikeRate = faced == 0 ? 0.0 : (runs / faced) * 100;
             final notOut = dismissBall == null;
             final howOut = notOut ? 'Not out' : _dismissalLabel(dismissBall!);
             final opponent = teamInfo.opponent;

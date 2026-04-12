@@ -732,7 +732,7 @@ List<FlSpot> _runRateSpots(Innings? innings, int ballsPerOver) {
   for (final over in innings.overs.where((o) => o.balls.isNotEmpty)) {
     cumulativeRuns += over.runsInOver;
     cumulativeLegalBalls += over.legalBallCount;
-    final runRate = cumulativeLegalBalls == 0 ? 0 : (cumulativeRuns / cumulativeLegalBalls) * ballsPerOver;
+    final runRate = cumulativeLegalBalls == 0 ? 0.0 : (cumulativeRuns / cumulativeLegalBalls) * ballsPerOver;
     spots.add(FlSpot((over.overNumber + 1).toDouble(), runRate));
   }
   return spots;
