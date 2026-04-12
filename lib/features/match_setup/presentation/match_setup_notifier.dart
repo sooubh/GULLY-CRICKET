@@ -14,7 +14,8 @@ class MatchSetupNotifier extends StateNotifier<MatchConfig> {
     required String team2Name,
     required int totalOvers,
     required int ballsPerOver,
-    required int playersPerSide,
+    required int team1PlayerCount,
+    required int team2PlayerCount,
     required bool enableToss,
   }) {
     state = state.copyWith(
@@ -22,10 +23,11 @@ class MatchSetupNotifier extends StateNotifier<MatchConfig> {
       team2Name: team2Name,
       totalOvers: totalOvers,
       ballsPerOver: ballsPerOver,
-      playersPerSide: playersPerSide,
+      team1PlayerCount: team1PlayerCount,
+      team2PlayerCount: team2PlayerCount,
       enableToss: enableToss,
-      team1Players: _ensurePlayers(state.team1Players, playersPerSide),
-      team2Players: _ensurePlayers(state.team2Players, playersPerSide),
+      team1Players: _ensurePlayers(state.team1Players, team1PlayerCount),
+      team2Players: _ensurePlayers(state.team2Players, team2PlayerCount),
     );
   }
 
@@ -36,7 +38,8 @@ class MatchSetupNotifier extends StateNotifier<MatchConfig> {
     state = state.copyWith(
       team1Players: team1Players,
       team2Players: team2Players,
-      playersPerSide: team1Players.length,
+      team1PlayerCount: team1Players.length,
+      team2PlayerCount: team2Players.length,
     );
   }
 

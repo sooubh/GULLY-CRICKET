@@ -54,22 +54,19 @@ class RuleEngine {
     required List<Player> battingPlayers,
     int? target,
   }) {
-    // Count unavailable batters for last-man-standing style rules.
-    final unavailableBatters =
-        battingPlayers.where((p) => p.isOut || p.isRetired || p.isRetiredHurt).length;
-
-    // End for normal rules when batting unit has no legal next pair.
-    if (!rules.lastManBatsAlone && innings.wickets >= (rules.totalPlayers - 1)) {
+    final totalBatters = battingPlayers.length;
+    final wicketsToEnd = (rules.lastManBatsAlone ? totalBatters : totalBatters - 1).clamp(0, 11);
+    final unavailableBatters = battingPlayers
+        .where((player) => player.isOut || player.isRetiredHurt || (player.isRetired && !rules.reEntryAllowed))
+        .length;
+    if (innings.wickets >= wicketsToEnd) {
+      return 'all_out';
+    }
+    if (unavailableBatters >= wicketsToEnd) {
       return 'all_out';
     }
 
-    // End for last-man rule once all partners except one are unavailable.
-    if (rules.lastManBatsAlone && unavailableBatters >= (rules.totalPlayers - 1)) {
-      return 'all_out';
-    }
-
-    // End if configured overs quota has been completed.
-    if (innings.completedOvers(rules.ballsPerOver) >= rules.totalOvers) {
+    if (_completedOvers(innings, rules.ballsPerOver) >= rules.totalOvers) {
       return 'overs_complete';
     }
 
@@ -79,6 +76,13 @@ class RuleEngine {
     }
 
     return null;
+  }
+
+  int _completedOvers(Innings innings, int ballsPerOver) {
+    if (ballsPerOver <= 0) return 0;
+    return innings.overs
+        .where((over) => over.balls.where((ball) => ball.isLegalBall).length >= ballsPerOver)
+        .length;
   }
 
   // Check if a bowler has exceeded max overs.

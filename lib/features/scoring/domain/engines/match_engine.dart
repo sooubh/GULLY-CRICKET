@@ -412,7 +412,10 @@ class MatchEngine {
     String description;
     if (second.totalRuns > first.totalRuns) {
       winner = second.battingTeamId == 'team1' ? match.team1Name : match.team2Name;
-      final wicketsRemaining = match.rules.totalPlayers - 1 - second.wickets;
+      final battingSecondTeamSize = match.isTeam1BattingSecond
+          ? match.rules.team1Players
+          : match.rules.team2Players;
+      final wicketsRemaining = (battingSecondTeamSize - 1 - second.wickets).clamp(0, 10);
       description = '$winner won by $wicketsRemaining wickets';
     } else if (first.totalRuns > second.totalRuns) {
       winner = first.battingTeamId == 'team1' ? match.team1Name : match.team2Name;

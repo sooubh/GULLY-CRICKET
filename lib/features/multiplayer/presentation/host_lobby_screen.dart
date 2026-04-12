@@ -56,78 +56,98 @@ class _HostLobbyScreenState extends ConsumerState<HostLobbyScreen> {
   Widget build(BuildContext context) {
     final host = ref.watch(hostServiceProvider);
     final match = ref.watch(activeMatchProvider);
+    final qrSize = (MediaQuery.of(context).size.width * 0.55).clamp(160.0, 240.0);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Host Match')),
-      body: _starting
-          ? const Center(child: Text('Starting WiFi server...'))
-          : _error != null
-              ? Center(child: Text(_error!))
-              : Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(
-                        '✅ Server Running',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              color: AppColors.primaryGreen,
-                              fontWeight: FontWeight.w700,
-                            ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: _starting
+              ? const Padding(
+                  padding: EdgeInsets.all(24),
+                  child: Center(child: Text('Starting WiFi server...')),
+                )
+              : _error != null
+                  ? Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Center(
+                        child: Text(
+                          _error!,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                          softWrap: false,
+                        ),
                       ),
-                      const SizedBox(height: 8),
-                      Text('${host.hostIp} : ${AppConstants.wsPort}'),
-                      const SizedBox(height: 8),
-                      StreamBuilder<int>(
-                        stream: host.connectedClientsStream,
-                        initialData: host.connectedClients,
-                        builder: (context, snapshot) {
-                          return Text('Connected devices: ${snapshot.data ?? 0}');
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      ToggleButtons(
-                        isSelected: <bool>[_modeIndex == 0, _modeIndex == 1],
-                        onPressed: (index) => setState(() => _modeIndex = index),
-                        children: const <Widget>[
-                          Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 16),
-                            child: Text('QR Code'),
+                    )
+                  : Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(
+                            '✅ Server Running',
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  color: AppColors.primaryGreen,
+                                  fontWeight: FontWeight.w700,
+                                ),
                           ),
-                          Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 16),
-                            child: Text('Manual IP'),
+                          const SizedBox(height: 8),
+                          Text('${host.hostIp} : ${AppConstants.wsPort}'),
+                          const SizedBox(height: 8),
+                          StreamBuilder<int>(
+                            stream: host.connectedClientsStream,
+                            initialData: host.connectedClients,
+                            builder: (context, snapshot) {
+                              return Text('Connected devices: ${snapshot.data ?? 0}');
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                          ToggleButtons(
+                            isSelected: <bool>[_modeIndex == 0, _modeIndex == 1],
+                            onPressed: (index) => setState(() => _modeIndex = index),
+                            children: const <Widget>[
+                              Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 16),
+                                child: Text('QR Code'),
+                              ),
+                              Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 16),
+                                child: Text('Manual IP'),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          Center(
+                            child: _modeIndex == 0
+                                ? QrImageView(
+                                    data: host.buildQrData(match?.id),
+                                    size: qrSize,
+                                    foregroundColor: Colors.white,
+                                    backgroundColor: AppColors.surface,
+                                  )
+                                : SelectableText(
+                                    '${host.hostIp}:${AppConstants.wsPort}${AppConstants.wsPath}',
+                                  ),
+                          ),
+                          const SizedBox(height: 12),
+                          const Center(child: Text('Scan QR or enter IP manually to join')),
+                          const SizedBox(height: 12),
+                          const Divider(),
+                          const SizedBox(height: 24),
+                          SizedBox(
+                            width: double.infinity,
+                            height: 56,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryGreen),
+                              onPressed: () => context.go('/live'),
+                              child: const Text('▶ Start Scoring'),
+                            ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
-                      Center(
-                        child: _modeIndex == 0
-                            ? QrImageView(
-                                data: host.buildQrData(match?.id),
-                                size: 240,
-                                foregroundColor: Colors.white,
-                                backgroundColor: AppColors.surface,
-                              )
-                            : SelectableText('${host.hostIp}:${AppConstants.wsPort}${AppConstants.wsPath}'),
-                      ),
-                      const SizedBox(height: 12),
-                      const Center(child: Text('Scan QR or enter IP manually to join')),
-                      const SizedBox(height: 12),
-                      const Divider(),
-                      const Spacer(),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 56,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryGreen),
-                          onPressed: () => context.go('/live'),
-                          child: const Text('▶ Start Scoring'),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                    ),
+        ),
+      ),
     );
   }
 }

@@ -4,7 +4,8 @@ class MatchConfig {
     this.team2Name = 'Team B',
     this.totalOvers = 5,
     this.ballsPerOver = 6,
-    this.playersPerSide = 6,
+    this.team1PlayerCount = 6,
+    this.team2PlayerCount = 6,
     this.enableToss = false,
     this.team1Players = const <String>[],
     this.team2Players = const <String>[],
@@ -26,7 +27,8 @@ class MatchConfig {
   final String team2Name;
   final int totalOvers;
   final int ballsPerOver;
-  final int playersPerSide;
+  final int team1PlayerCount;
+  final int team2PlayerCount;
   final bool enableToss;
   final List<String> team1Players;
   final List<String> team2Players;
@@ -49,7 +51,8 @@ class MatchConfig {
     String? team2Name,
     int? totalOvers,
     int? ballsPerOver,
-    int? playersPerSide,
+    int? team1PlayerCount,
+    int? team2PlayerCount,
     bool? enableToss,
     List<String>? team1Players,
     List<String>? team2Players,
@@ -71,7 +74,8 @@ class MatchConfig {
       team2Name: team2Name ?? this.team2Name,
       totalOvers: totalOvers ?? this.totalOvers,
       ballsPerOver: ballsPerOver ?? this.ballsPerOver,
-      playersPerSide: playersPerSide ?? this.playersPerSide,
+      team1PlayerCount: team1PlayerCount ?? this.team1PlayerCount,
+      team2PlayerCount: team2PlayerCount ?? this.team2PlayerCount,
       enableToss: enableToss ?? this.enableToss,
       team1Players: team1Players ?? this.team1Players,
       team2Players: team2Players ?? this.team2Players,

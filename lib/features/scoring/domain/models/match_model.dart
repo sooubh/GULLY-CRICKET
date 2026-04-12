@@ -65,10 +65,28 @@ class MatchModel extends HiveObject {
   bool get isFirstInnings => secondInnings == null;
   int? get target => firstInnings == null ? null : firstInnings!.totalRuns + 1;
 
-  List<Player> get battingTeamPlayers =>
-      battingFirstTeamId == 'team1' ? team1Players : team2Players;
-  List<Player> get bowlingTeamPlayers =>
-      battingFirstTeamId == 'team1' ? team2Players : team1Players;
+  List<Player> get battingTeamPlayers {
+    if (battingFirstTeamId == 'team1') {
+      return isFirstInnings ? team1Players : team2Players;
+    }
+    return isFirstInnings ? team2Players : team1Players;
+  }
+  List<Player> get currentBattingTeam => battingTeamPlayers;
+  List<Player> get bowlingTeamPlayers {
+    if (battingFirstTeamId == 'team1') {
+      return isFirstInnings ? team2Players : team1Players;
+    }
+    return isFirstInnings ? team1Players : team2Players;
+  }
+  int get team1PlayerCount => team1Players.length;
+  int get team2PlayerCount => team2Players.length;
+  bool get isTeam1BattingSecond => battingFirstTeamId == 'team2';
+
+  int get currentBattingTeamSize {
+    final isTeam1Batting = (battingFirstTeamId == 'team1' && isFirstInnings) ||
+        (battingFirstTeamId == 'team2' && !isFirstInnings);
+    return isTeam1Batting ? team1PlayerCount : team2PlayerCount;
+  }
 
   MatchModel copyWith({
     String? id,

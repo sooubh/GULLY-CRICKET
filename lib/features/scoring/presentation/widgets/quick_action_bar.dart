@@ -19,23 +19,41 @@ class QuickActionBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      padding: const EdgeInsets.symmetric(horizontal: 12),
       child: Row(
         children: <Widget>[
           Expanded(
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              height: 36,
+              padding: const EdgeInsets.symmetric(horizontal: 10),
               decoration: BoxDecoration(
                 color: AppColors.surfaceVariant,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Text(partnership, overflow: TextOverflow.ellipsis),
+              alignment: Alignment.centerLeft,
+              child: Text(
+                partnership,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+                softWrap: false,
+              ),
             ),
           ),
-          const SizedBox(width: 8),
-          IconButton(onPressed: onSwap, icon: const Icon(Icons.swap_horiz)),
-          IconButton(onPressed: onSettings, icon: const Icon(Icons.settings)),
-          IconButton(onPressed: onWifi, icon: const Icon(Icons.wifi_tethering)),
+          IconButton(
+            visualDensity: VisualDensity.compact,
+            onPressed: onSwap,
+            icon: const Icon(Icons.swap_horiz),
+          ),
+          IconButton(
+            visualDensity: VisualDensity.compact,
+            onPressed: onSettings,
+            icon: const Icon(Icons.settings),
+          ),
+          IconButton(
+            visualDensity: VisualDensity.compact,
+            onPressed: onWifi,
+            icon: const Icon(Icons.wifi_tethering),
+          ),
         ],
       ),
     );

@@ -39,7 +39,9 @@ class GullyRules extends HiveObject {
   @HiveField(16)
   final int totalOvers;
   @HiveField(17)
-  final int totalPlayers;
+  final int team1Players;
+  @HiveField(18)
+  final int team2Players;
 
   GullyRules({
     this.halfCenturyRetire = true,
@@ -59,8 +61,11 @@ class GullyRules extends HiveObject {
     this.maxOversPerBowler = 0,
     this.ballsPerOver = 6,
     this.totalOvers = 5,
-    this.totalPlayers = 6,
+    this.team1Players = 6,
+    this.team2Players = 6,
   });
+
+  int get maxPlayers => team1Players > team2Players ? team1Players : team2Players;
 
   GullyRules copyWith({
     bool? halfCenturyRetire,
@@ -80,7 +85,8 @@ class GullyRules extends HiveObject {
     int? maxOversPerBowler,
     int? ballsPerOver,
     int? totalOvers,
-    int? totalPlayers,
+    int? team1Players,
+    int? team2Players,
   }) {
     return GullyRules(
       halfCenturyRetire: halfCenturyRetire ?? this.halfCenturyRetire,
@@ -100,7 +106,8 @@ class GullyRules extends HiveObject {
       maxOversPerBowler: maxOversPerBowler ?? this.maxOversPerBowler,
       ballsPerOver: ballsPerOver ?? this.ballsPerOver,
       totalOvers: totalOvers ?? this.totalOvers,
-      totalPlayers: totalPlayers ?? this.totalPlayers,
+      team1Players: team1Players ?? this.team1Players,
+      team2Players: team2Players ?? this.team2Players,
     );
   }
 
@@ -123,7 +130,9 @@ class GullyRules extends HiveObject {
       'maxOversPerBowler': maxOversPerBowler,
       'ballsPerOver': ballsPerOver,
       'totalOvers': totalOvers,
-      'totalPlayers': totalPlayers,
+      'team1Players': team1Players,
+      'team2Players': team2Players,
+      'totalPlayers': maxPlayers,
     };
   }
 
@@ -146,7 +155,8 @@ class GullyRules extends HiveObject {
       maxOversPerBowler: json['maxOversPerBowler'] as int? ?? 0,
       ballsPerOver: json['ballsPerOver'] as int? ?? 6,
       totalOvers: json['totalOvers'] as int? ?? 5,
-      totalPlayers: json['totalPlayers'] as int? ?? 6,
+      team1Players: json['team1Players'] as int? ?? json['totalPlayers'] as int? ?? 6,
+      team2Players: json['team2Players'] as int? ?? json['totalPlayers'] as int? ?? 6,
     );
   }
 }
