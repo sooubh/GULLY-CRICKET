@@ -71,20 +71,37 @@ class OverlayService {
   }
 
   static saw.SystemWindowBody _buildBody(OverlayScoreData data) {
-    return saw.SystemWindowBody(
-      rows: <saw.EachRow>[
+    final rows = <saw.EachRow>[
+      saw.EachRow(
+        columns: <saw.EachColumn>[
+          saw.EachColumn(
+            text: saw.SystemWindowText(
+              text: data.batsmenInfo,
+              fontSize: 11,
+              textColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    ];
+    if (data.currentEvent.isNotEmpty) {
+      rows.add(
         saw.EachRow(
           columns: <saw.EachColumn>[
             saw.EachColumn(
               text: saw.SystemWindowText(
-                text: data.currentEvent.isNotEmpty ? data.currentEvent : data.batsmenInfo,
+                text: data.currentEvent,
                 fontSize: 11,
-                textColor: Colors.white,
+                textColor: Colors.white70,
               ),
             ),
           ],
         ),
-      ],
+      );
+    }
+
+    return saw.SystemWindowBody(
+      rows: rows,
       padding: saw.SystemWindowPadding(left: 12, right: 12, bottom: 8, top: 4),
     );
   }
