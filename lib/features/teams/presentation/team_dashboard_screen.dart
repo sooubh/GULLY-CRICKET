@@ -33,25 +33,26 @@ class TeamDashboardScreen extends ConsumerWidget {
     if (team == null) {
       return const Scaffold(body: Center(child: Text('Team not found')));
     }
+    final teamName = team.name;
 
     final matches = ref.watch(matchListProvider);
     final related = matches
-        .where((match) => match.status == MatchStatus.completed && _isTeamInvolved(match, team.name))
+        .where((match) => match.status == MatchStatus.completed && _isTeamInvolved(match, teamName))
         .toList()
       ..sort((a, b) => (b.completedAt ?? b.createdAt).compareTo(a.completedAt ?? a.createdAt));
 
     final scores = related
-        .map((match) => _teamRunsInMatch(match, team.name))
+        .map((match) => _teamRunsInMatch(match, teamName))
         .whereType<int>()
         .toList(growable: false);
 
-    final avgScore = scores.isEmpty ? 0 : scores.reduce((a, b) => a + b) / scores.length;
+    final avgScore = scores.isEmpty ? 0.0 : scores.reduce((a, b) => a + b) / scores.length;
     final highestScore = scores.isEmpty ? 0 : scores.reduce(math.max);
 
-    final mostPlayedOpponent = _mostPlayedOpponent(related, team.name);
+    final mostPlayedOpponent = _mostPlayedOpponent(related, teamName);
     final h2h = mostPlayedOpponent == null
         ? const _H2HRecord(wins: 0, losses: 0, ties: 0)
-        : _headToHead(related, team.name, mostPlayedOpponent);
+        : _headToHead(related, teamName, mostPlayedOpponent);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Team Dashboard')),
