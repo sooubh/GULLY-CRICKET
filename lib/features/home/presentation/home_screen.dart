@@ -20,7 +20,16 @@ class HomeScreen extends StatelessWidget {
               children: <Widget>[
                 const OfflineModeBanner(),
                 const SizedBox(height: 12),
-                const Icon(Icons.sports_cricket, size: 72, color: AppColors.accentGold)
+                Center(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(24),
+                    child: Image.asset(
+                      'assets/images/app_logo.png',
+                      width: 96,
+                      height: 96,
+                    ),
+                  ),
+                )
                     .animate()
                     .fadeIn(duration: 350.ms)
                     .slideY(begin: 0.25, end: 0, duration: 350.ms, curve: Curves.easeOutCubic),

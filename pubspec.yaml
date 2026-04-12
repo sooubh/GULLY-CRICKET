@@ -41,6 +41,7 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
+    - assets/images/app_logo.png
     - assets/sounds/four.mp3
     - assets/sounds/six.mp3
     - assets/sounds/wicket.mp3

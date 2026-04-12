@@ -1,4 +1,4 @@
-package com.example.gully_cricket
+package com.sooubh.gullycricket
 
 import io.flutter.embedding.android.FlutterActivity
 
