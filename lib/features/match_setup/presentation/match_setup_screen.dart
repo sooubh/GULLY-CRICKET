@@ -62,7 +62,7 @@ class _MatchSetupScreenState extends ConsumerState<MatchSetupScreen> {
           team2PlayerCount: _team2PlayerCount,
           enableToss: _enableToss,
         );
-    context.push('/teams');
+    context.push('/setup/teams');
   }
 
   @override

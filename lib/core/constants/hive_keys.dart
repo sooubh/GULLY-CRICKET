@@ -4,5 +4,6 @@ class HiveKeys {
   static const matchBox = 'matches';
   static const settingsBox = 'settings';
   static const savedPlayersBox = 'saved_players';
+  static const teamsBox = 'teams';
   static const onboardingCompleted = 'onboarding_completed';
 }

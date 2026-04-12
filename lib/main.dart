@@ -13,6 +13,7 @@ import 'features/scoring/domain/models/match_model.dart';
 import 'features/scoring/domain/models/over_model.dart';
 import 'features/scoring/domain/models/partnership_model.dart';
 import 'features/scoring/domain/models/player_model.dart';
+import 'features/teams/domain/team_model.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,9 +26,11 @@ Future<void> main() async {
     ..registerAdapter(PartnershipAdapter())
     ..registerAdapter(InningsAdapter())
     ..registerAdapter(MatchModelAdapter())
-    ..registerAdapter(SavedPlayerAdapter());
+    ..registerAdapter(SavedPlayerAdapter())
+    ..registerAdapter(TeamModelAdapter());
   await Hive.openBox<MatchModel>(HiveKeys.matchBox);
   await Hive.openBox<SavedPlayer>(HiveKeys.savedPlayersBox);
+  await Hive.openBox<TeamModel>(HiveKeys.teamsBox);
   await Hive.openBox(HiveKeys.settingsBox);
   await MobileAds.instance.initialize();
   runApp(const ProviderScope(child: GullyCricketApp()));

@@ -107,6 +107,17 @@ class HomeScreen extends StatelessWidget {
                     .animate()
                     .slideY(begin: 0.22, end: 0, duration: 300.ms, delay: 400.ms)
                     .fadeIn(delay: 400.ms, duration: 300.ms),
+                const SizedBox(height: 16),
+                SizedBox(
+                  height: 56,
+                  child: OutlinedButton(
+                    onPressed: () => context.go('/teams'),
+                    child: const Text('🛡️ My Teams'),
+                  ),
+                )
+                    .animate()
+                    .slideY(begin: 0.22, end: 0, duration: 300.ms, delay: 500.ms)
+                    .fadeIn(delay: 500.ms, duration: 300.ms),
                 const Spacer(),
                 const Align(
                   alignment: Alignment.center,

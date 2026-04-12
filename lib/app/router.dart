@@ -16,6 +16,10 @@ import '../features/result/presentation/match_history_screen.dart';
 import '../features/result/presentation/result_screen.dart';
 import '../features/scoring/domain/models/match_model.dart';
 import '../features/scoring/presentation/live_score_screen.dart';
+import '../features/teams/presentation/create_team_screen.dart';
+import '../features/teams/presentation/player_dashboard_screen.dart';
+import '../features/teams/presentation/team_dashboard_screen.dart';
+import '../features/teams/presentation/teams_screen.dart';
 
 final GoRouter appRouter = GoRouter(
   redirect: (BuildContext context, GoRouterState state) {
@@ -56,10 +60,31 @@ final GoRouter appRouter = GoRouter(
           const RulesConfigScreen(),
     ),
     GoRoute(
-      path: '/teams',
-      name: 'teams',
+      path: '/setup/teams',
+      name: 'setupTeams',
       builder: (BuildContext context, GoRouterState state) =>
           const TeamSetupScreen(),
+    ),
+    GoRoute(
+      path: '/teams',
+      name: 'teams',
+      builder: (BuildContext context, GoRouterState state) => const TeamsScreen(),
+    ),
+    GoRoute(
+      path: '/teams/create',
+      name: 'createTeam',
+      builder: (BuildContext context, GoRouterState state) {
+        final teamId = state.uri.queryParameters['teamId'];
+        return CreateTeamScreen(teamId: teamId);
+      },
+    ),
+    GoRoute(
+      path: '/teams/:teamId',
+      name: 'teamDashboard',
+      builder: (BuildContext context, GoRouterState state) {
+        final teamId = state.pathParameters['teamId'] ?? '';
+        return TeamDashboardScreen(teamId: teamId);
+      },
     ),
     GoRoute(
       path: '/host',
@@ -107,6 +132,14 @@ final GoRouter appRouter = GoRouter(
       path: '/players',
       name: 'players',
       builder: (BuildContext context, GoRouterState state) => const SavedPlayersScreen(),
+    ),
+    GoRoute(
+      path: '/player/:playerName',
+      name: 'playerDashboard',
+      builder: (BuildContext context, GoRouterState state) {
+        final playerName = Uri.decodeComponent(state.pathParameters['playerName'] ?? '');
+        return PlayerDashboardScreen(playerName: playerName);
+      },
     ),
   ],
 );
