@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/theme/app_colors.dart';
 import '../domain/models/player_model.dart';
 
 class SelectBatsmanScreen extends StatelessWidget {
@@ -29,7 +30,7 @@ class SelectBatsmanScreen extends StatelessWidget {
 
     return showModalBottomSheet<Player>(
       context: context,
-      isScrollControlled: false,
+      isScrollControlled: true,
       showDragHandle: true,
       builder: (context) => SelectBatsmanScreen(players: available, title: title),
     );
@@ -37,36 +38,51 @@ class SelectBatsmanScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: SizedBox(
-        height: 360,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-              child: Text(title, style: Theme.of(context).textTheme.titleLarge),
-            ),
-            const Divider(height: 1),
-            Expanded(
-              child: players.isEmpty
-                  ? const Center(child: Text('No available batsman'))
-                  : ListView.separated(
-                      itemCount: players.length,
-                      separatorBuilder: (_, __) => const Divider(height: 1),
-                      itemBuilder: (context, index) {
-                        final player = players[index];
-                        return ListTile(
-                          title: Text(player.name),
-                          subtitle: Text(player.isRetired ? 'retired' : 'available'),
-                          onTap: () => Navigator.of(context).pop(player),
-                        );
-                      },
-                    ),
-            ),
-          ],
-        ),
-      ),
+    return DraggableScrollableSheet(
+      initialChildSize: 0.5,
+      minChildSize: 0.3,
+      maxChildSize: 0.85,
+      expand: false,
+      builder: (context, scrollController) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                child: Text(title, style: Theme.of(context).textTheme.titleLarge),
+              ),
+              const Divider(height: 1),
+              Expanded(
+                child: players.isEmpty
+                    ? const Center(child: Text('No available batsman'))
+                    : ListView.separated(
+                        controller: scrollController,
+                        itemCount: players.length,
+                        separatorBuilder: (_, __) => const Divider(height: 1),
+                        itemBuilder: (context, index) {
+                          final player = players[index];
+                          return ListTile(
+                            title: Text(
+                              player.name,
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                              softWrap: false,
+                            ),
+                            subtitle: Text(player.isRetired ? 'retired' : 'available'),
+                            onTap: () => Navigator.of(context).pop(player),
+                          );
+                        },
+                      ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

@@ -138,129 +138,135 @@ class _RulesConfigScreenState extends ConsumerState<RulesConfigScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Match Rules')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: <Widget>[
-          Text(
-            'Set your gully rules — all optional',
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
-          const SizedBox(height: 12),
-          Card(
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
             child: Column(
               children: <Widget>[
-                const ListTile(title: Text('🏏 Batting Rules')),
-                SwitchListTile(
-                  title: const Text('Retire at 50 runs'),
-                  value: _halfCenturyRetire,
-                  onChanged: (value) => setState(() => _halfCenturyRetire = value),
+                Text(
+                  'Set your gully rules — all optional',
+                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
-                SwitchListTile(
-                  title: const Text('Retire at 100 runs'),
-                  value: _centuryRetire,
-                  onChanged: (value) => setState(() => _centuryRetire = value),
-                ),
-                SwitchListTile(
-                  title: const Text('Last man bats alone'),
-                  value: _lastManBatsAlone,
-                  onChanged: (value) => setState(() => _lastManBatsAlone = value),
-                ),
-                SwitchListTile(
-                  title: const Text('Re-entry allowed (retired batsman can return)'),
-                  value: _reEntryAllowed,
-                  onChanged: (value) => setState(() => _reEntryAllowed = value),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-          Card(
-            child: Column(
-              children: <Widget>[
-                const ListTile(title: Text('🤲 Fielding Rules')),
-                SwitchListTile(
-                  title: const Text('1-Tip 1-Hand = Out'),
-                  value: _tipOneHandOut,
-                  onChanged: (value) => setState(() => _tipOneHandOut = value),
-                ),
-                SwitchListTile(
-                  title: const Text('Wall catch = Out'),
-                  value: _wallCatchOut,
-                  onChanged: (value) => setState(() => _wallCatchOut = value),
-                ),
-                SwitchListTile(
-                  title: const Text('One-bounce catch = Out'),
-                  value: _oneBounceCatchOut,
-                  onChanged: (value) => setState(() => _oneBounceCatchOut = value),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-          Card(
-            child: Column(
-              children: <Widget>[
-                const ListTile(title: Text('🎯 Bowling Rules')),
-                SwitchListTile(
-                  title: const Text('No-ball gives free hit'),
-                  value: _noballFreeHit,
-                  onChanged: (value) => setState(() => _noballFreeHit = value),
-                ),
-                SwitchListTile(
-                  title: const Text('LBW rule'),
-                  value: _lbwAllowed,
-                  onChanged: (value) => setState(() => _lbwAllowed = value),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  child: Row(
+                const SizedBox(height: 12),
+                Card(
+                  child: Column(
                     children: <Widget>[
-                      const Expanded(child: Text('Max overs per bowler')),
-                      IconButton(
-                        onPressed: _maxOversPerBowler == 0
-                            ? null
-                            : () => setState(() => _maxOversPerBowler--),
-                        icon: const Icon(Icons.remove_circle_outline),
+                      const ListTile(title: Text('🏏 Batting Rules')),
+                      SwitchListTile(
+                        title: const Text('Retire at 50 runs'),
+                        value: _halfCenturyRetire,
+                        onChanged: (value) => setState(() => _halfCenturyRetire = value),
                       ),
-                      Text('$_maxOversPerBowler'),
-                      IconButton(
-                        onPressed: () => setState(() => _maxOversPerBowler++),
-                        icon: const Icon(Icons.add_circle_outline),
+                      SwitchListTile(
+                        title: const Text('Retire at 100 runs'),
+                        value: _centuryRetire,
+                        onChanged: (value) => setState(() => _centuryRetire = value),
+                      ),
+                      SwitchListTile(
+                        title: const Text('Last man bats alone'),
+                        value: _lastManBatsAlone,
+                        onChanged: (value) => setState(() => _lastManBatsAlone = value),
+                      ),
+                      SwitchListTile(
+                        title: const Text('Re-entry allowed (retired batsman can return)'),
+                        value: _reEntryAllowed,
+                        onChanged: (value) => setState(() => _reEntryAllowed = value),
                       ),
                     ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Card(
+                  child: Column(
+                    children: <Widget>[
+                      const ListTile(title: Text('🤲 Fielding Rules')),
+                      SwitchListTile(
+                        title: const Text('1-Tip 1-Hand = Out'),
+                        value: _tipOneHandOut,
+                        onChanged: (value) => setState(() => _tipOneHandOut = value),
+                      ),
+                      SwitchListTile(
+                        title: const Text('Wall catch = Out'),
+                        value: _wallCatchOut,
+                        onChanged: (value) => setState(() => _wallCatchOut = value),
+                      ),
+                      SwitchListTile(
+                        title: const Text('One-bounce catch = Out'),
+                        value: _oneBounceCatchOut,
+                        onChanged: (value) => setState(() => _oneBounceCatchOut = value),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Card(
+                  child: Column(
+                    children: <Widget>[
+                      const ListTile(title: Text('🎯 Bowling Rules')),
+                      SwitchListTile(
+                        title: const Text('No-ball gives free hit'),
+                        value: _noballFreeHit,
+                        onChanged: (value) => setState(() => _noballFreeHit = value),
+                      ),
+                      SwitchListTile(
+                        title: const Text('LBW rule'),
+                        value: _lbwAllowed,
+                        onChanged: (value) => setState(() => _lbwAllowed = value),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        child: Row(
+                          children: <Widget>[
+                            const Expanded(child: Text('Max overs per bowler')),
+                            IconButton(
+                              onPressed: _maxOversPerBowler == 0
+                                  ? null
+                                  : () => setState(() => _maxOversPerBowler--),
+                              icon: const Icon(Icons.remove_circle_outline),
+                            ),
+                            Text('$_maxOversPerBowler'),
+                            IconButton(
+                              onPressed: () => setState(() => _maxOversPerBowler++),
+                              icon: const Icon(Icons.add_circle_outline),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Card(
+                  child: Column(
+                    children: <Widget>[
+                      const ListTile(title: Text('🚀 Boundary Rules')),
+                      SwitchListTile(
+                        title: const Text('6 = Batsman OUT (gully rule)'),
+                        value: _sixIsOut,
+                        onChanged: (value) => setState(() => _sixIsOut = value),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                SwitchListTile(
+                  title: const Text('Enable Multiplayer (WiFi)'),
+                  value: _enableMultiplayer,
+                  onChanged: (value) => setState(() => _enableMultiplayer = value),
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: _startMatch,
+                    child: const Text('🏏 Start Match'),
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 12),
-          Card(
-            child: Column(
-              children: <Widget>[
-                const ListTile(title: Text('🚀 Boundary Rules')),
-                SwitchListTile(
-                  title: const Text('6 = Batsman OUT (gully rule)'),
-                  value: _sixIsOut,
-                  onChanged: (value) => setState(() => _sixIsOut = value),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
-          SwitchListTile(
-            title: const Text('Enable Multiplayer (WiFi)'),
-            value: _enableMultiplayer,
-            onChanged: (value) => setState(() => _enableMultiplayer = value),
-          ),
-          const SizedBox(height: 8),
-          SizedBox(
-            height: 56,
-            child: ElevatedButton(
-              onPressed: _startMatch,
-              child: const Text('🏏 Start Match'),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

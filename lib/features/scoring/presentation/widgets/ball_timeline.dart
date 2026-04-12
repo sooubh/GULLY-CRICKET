@@ -16,21 +16,22 @@ class BallTimeline extends StatelessWidget {
   Widget build(BuildContext context) {
     final shown = balls.length > 6 ? balls.sublist(balls.length - 6) : balls;
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      height: 52,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
         children: <Widget>[
           Text('This over:', style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            children: shown
-                .map((ball) => _BallChip(ball: ball, key: ValueKey<String>(ball.id)))
-                .toList()
-                .animate(interval: 40.ms)
-                .slideX(begin: 1.0, end: 0.0, duration: 300.ms, curve: Curves.easeOutCubic),
-          ),
+          const SizedBox(width: 8),
+          ...shown
+              .map(
+                (ball) => Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: _BallChip(ball: ball, key: ValueKey<String>(ball.id)),
+                ),
+              )
+              .toList()
+              .animate(interval: 40.ms)
+              .slideX(begin: 1.0, end: 0.0, duration: 300.ms, curve: Curves.easeOutCubic),
         ],
       ),
     );

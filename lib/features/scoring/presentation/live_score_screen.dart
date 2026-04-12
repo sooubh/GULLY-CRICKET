@@ -421,20 +421,33 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen> {
     ];
     return showModalBottomSheet<String>(
       context: context,
+      isScrollControlled: true,
       showDragHandle: true,
-      builder: (context) => SafeArea(
-        child: ListView(
-          shrinkWrap: true,
-          children: <Widget>[
-            const ListTile(title: Text('Select Wicket Type')),
-            ...options.map(
-              (entry) => ListTile(
-                title: Text(entry.value),
-                onTap: () => Navigator.of(context).pop(entry.key),
-              ),
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.5,
+        minChildSize: 0.3,
+        maxChildSize: 0.85,
+        expand: false,
+        builder: (context, scrollController) {
+          return Container(
+            decoration: const BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
             ),
-          ],
-        ),
+            child: ListView(
+              controller: scrollController,
+              children: <Widget>[
+                const ListTile(title: Text('Select Wicket Type')),
+                ...options.map(
+                  (entry) => ListTile(
+                    title: Text(entry.value),
+                    onTap: () => Navigator.of(context).pop(entry.key),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
@@ -620,151 +633,155 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen> {
     final partnershipText = 'Partner: ${partnershipInfo.runs}(${partnershipInfo.balls})';
 
     return Scaffold(
-      floatingActionButtonLocation: FloatingActionButtonLocation.endTop,
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(top: 24),
-        child: FloatingActionButton.small(
-          onPressed: _showWifiInfo,
-          child: const Icon(Icons.wifi_tethering),
-        ),
-      ),
       body: SafeArea(
         child: Stack(
           children: <Widget>[
             Column(
               children: <Widget>[
-            Padding(
-              padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
-              child: Row(
-                children: <Widget>[
-                  IconButton(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Menu coming soon')),
+                SizedBox(
+                  height: 48,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: Row(
+                      children: <Widget>[
+                        IconButton(
+                          onPressed: () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Menu coming soon')),
+                            );
+                          },
+                          icon: const Icon(Icons.menu),
+                        ),
+                        const Expanded(
+                          child: Center(
+                            child: Text(
+                              'LIVE',
+                              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () => context.push('/result'),
+                          icon: const Icon(Icons.bar_chart),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  height: 120,
+                  child: ScoreboardHeader(match: match, innings: innings),
+                ),
+                SizedBox(
+                  height: 96,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
+                    child: Column(
+                      children: <Widget>[
+                        _PlayerLine(
+                          icon: '🟢',
+                          name: '${striker?.name ?? 'Select striker'}*',
+                          stats:
+                              '${striker?.runsScored ?? 0}(${striker?.ballsFaced ?? 0})  SR: ${(striker?.strikeRate ?? 0).toStringAsFixed(0)}',
+                        ),
+                        const SizedBox(height: 6),
+                        _PlayerLine(
+                          icon: '🔵',
+                          name: nonStriker?.name ?? 'Select non-striker',
+                          stats:
+                              '${nonStriker?.runsScored ?? 0}(${nonStriker?.ballsFaced ?? 0})  SR: ${(nonStriker?.strikeRate ?? 0).toStringAsFixed(0)}',
+                        ),
+                        const SizedBox(height: 6),
+                        _PlayerLine(
+                          icon: '🎯',
+                          name: bowler?.name ?? 'Select bowler',
+                          stats:
+                              '${bowlerFigures.oversText}-${bowlerFigures.maidens}-${bowlerFigures.runs}-${bowlerFigures.wickets}  Eco: ${bowlerFigures.economy.toStringAsFixed(1)}',
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  height: 52,
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: BallTimeline(balls: allBalls),
+                  ),
+                ),
+                Expanded(
+                  child: ScorePad(
+                    onRun: _handleRun,
+                    onWide: () async {
+                      await HapticFeedback.selectionClick();
+                      await _recordStandardDelivery(isWide: true);
+                    },
+                    onNoBall: () async {
+                      await HapticFeedback.selectionClick();
+                      await _recordStandardDelivery(isNoBall: true);
+                    },
+                    onBye: () async {
+                      await HapticFeedback.selectionClick();
+                      await _recordStandardDelivery(runs: 1, isBye: true);
+                    },
+                    onLegBye: () async {
+                      await HapticFeedback.selectionClick();
+                      await _recordStandardDelivery(runs: 1, isLegBye: true);
+                    },
+                    onOut: _handleOut,
+                    onUndo: _handleUndo,
+                    undoArmed: _undoArmed,
+                  ),
+                ),
+                SizedBox(
+                  height: 48,
+                  child: QuickActionBar(
+                    partnership: partnershipText,
+                    onSwap: () async {
+                      final strikerId = innings.currentBatsmanId;
+                      final nonId = innings.currentNonStrikerId;
+                      if (strikerId == null || nonId == null) return;
+                      await ref.read(activeMatchProvider.notifier).swapStrike();
+                      await _broadcastIfHosting();
+                    },
+                    onSettings: () async {
+                      await showModalBottomSheet<void>(
+                        context: context,
+                        showDragHandle: true,
+                        builder: (context) => SafeArea(
+                          child: ValueListenableBuilder<Box<dynamic>>(
+                            valueListenable:
+                                Hive.box<dynamic>(
+                                  HiveKeys.settingsBox,
+                                ).listenable(keys: const <String>['sound_enabled']),
+                            builder: (context, settings, _) {
+                              final soundEnabled =
+                                  (settings.get('sound_enabled', defaultValue: true) as bool?) ??
+                                  true;
+                              return ListView(
+                                shrinkWrap: true,
+                                children: <Widget>[
+                                  const ListTile(title: Text('Match Settings')),
+                                  ListTile(title: Text('Overs: ${match.rules.totalOvers}')),
+                                  ListTile(title: Text('Balls/Over: ${match.rules.ballsPerOver}')),
+                                  ListTile(title: Text('Players: ${match.rules.totalPlayers}')),
+                                  SwitchListTile(
+                                    title: const Text('Sound Effects'),
+                                    value: soundEnabled,
+                                    onChanged: (value) async {
+                                      await ref.read(soundServiceProvider).setEnabled(value);
+                                    },
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
+                        ),
                       );
                     },
-                    icon: const Icon(Icons.menu),
+                    onWifi: _showWifiInfo,
                   ),
-                  const Expanded(
-                    child: Center(
-                      child: Text(
-                        'LIVE',
-                        style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () => context.push('/result'),
-                    icon: const Icon(Icons.bar_chart),
-                  ),
-                ],
-              ),
-            ),
-            ScoreboardHeader(match: match, innings: innings),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: <Widget>[
-                  _PlayerLine(
-                    icon: '🟢',
-                    name: '${striker?.name ?? 'Select striker'}*',
-                    stats:
-                        '${striker?.runsScored ?? 0}(${striker?.ballsFaced ?? 0})  SR: ${(striker?.strikeRate ?? 0).toStringAsFixed(0)}',
-                  ),
-                  const SizedBox(height: 6),
-                  _PlayerLine(
-                    icon: '🔵',
-                    name: nonStriker?.name ?? 'Select non-striker',
-                    stats:
-                        '${nonStriker?.runsScored ?? 0}(${nonStriker?.ballsFaced ?? 0})  SR: ${(nonStriker?.strikeRate ?? 0).toStringAsFixed(0)}',
-                  ),
-                  const Divider(height: 18),
-                  _PlayerLine(
-                    icon: '🎯',
-                    name: bowler?.name ?? 'Select bowler',
-                    stats:
-                        '${bowlerFigures.oversText}-${bowlerFigures.maidens}-${bowlerFigures.runs}-${bowlerFigures.wickets}  Eco: ${bowlerFigures.economy.toStringAsFixed(1)}',
-                  ),
-                ],
-              ),
-            ),
-            BallTimeline(balls: allBalls),
-            const SizedBox(height: 6),
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  children: <Widget>[
-                    ScorePad(
-                      onRun: _handleRun,
-                      onWide: () async {
-                        await HapticFeedback.selectionClick();
-                        await _recordStandardDelivery(isWide: true);
-                      },
-                      onNoBall: () async {
-                        await HapticFeedback.selectionClick();
-                        await _recordStandardDelivery(isNoBall: true);
-                      },
-                      onBye: () async {
-                        await HapticFeedback.selectionClick();
-                        await _recordStandardDelivery(runs: 1, isBye: true);
-                      },
-                      onLegBye: () async {
-                        await HapticFeedback.selectionClick();
-                        await _recordStandardDelivery(runs: 1, isLegBye: true);
-                      },
-                      onOut: _handleOut,
-                      onUndo: _handleUndo,
-                      undoArmed: _undoArmed,
-                    ),
-                  ],
                 ),
-              ),
-            ),
-                QuickActionBar(
-              partnership: partnershipText,
-              onSwap: () async {
-                final strikerId = innings.currentBatsmanId;
-                final nonId = innings.currentNonStrikerId;
-                if (strikerId == null || nonId == null) return;
-                await ref.read(activeMatchProvider.notifier).swapStrike();
-                await _broadcastIfHosting();
-              },
-              onSettings: () async {
-                await showModalBottomSheet<void>(
-                  context: context,
-                  showDragHandle: true,
-                  builder: (context) => SafeArea(
-                    child: ValueListenableBuilder<Box<dynamic>>(
-                      valueListenable:
-                          Hive.box<dynamic>(
-                            HiveKeys.settingsBox,
-                          ).listenable(keys: const <String>['sound_enabled']),
-                      builder: (context, settings, _) {
-                        final soundEnabled =
-                            (settings.get('sound_enabled', defaultValue: true) as bool?) ?? true;
-                        return ListView(
-                          shrinkWrap: true,
-                          children: <Widget>[
-                            const ListTile(title: Text('Match Settings')),
-                            ListTile(title: Text('Overs: ${match.rules.totalOvers}')),
-                            ListTile(title: Text('Balls/Over: ${match.rules.ballsPerOver}')),
-                            ListTile(title: Text('Players: ${match.rules.totalPlayers}')),
-                            SwitchListTile(
-                              title: const Text('Sound Effects'),
-                              value: soundEnabled,
-                              onChanged: (value) async {
-                                await ref.read(soundServiceProvider).setEnabled(value);
-                              },
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-                  ),
-                );
-              },
-              onWifi: _showWifiInfo,
-            ),
               ],
             ),
             if (_showWicketFlash)
@@ -821,6 +838,7 @@ class _PlayerLine extends StatelessWidget {
             '$name   $stats',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
+            softWrap: false,
           ),
         ),
       ],

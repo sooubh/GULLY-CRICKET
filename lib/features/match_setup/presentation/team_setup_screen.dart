@@ -83,30 +83,37 @@ class _TeamSetupScreenState extends ConsumerState<TeamSetupScreen> {
   Widget build(BuildContext context) {
     final config = ref.watch(matchSetupProvider);
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(title: const Text('Add Players')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: <Widget>[
-          _TeamSection(
-            teamName: config.team1Name,
-            controllers: _team1Controllers,
-            onAddAnother: _addTeam1Player,
-          ),
-          const SizedBox(height: 20),
-          _TeamSection(
-            teamName: config.team2Name,
-            controllers: _team2Controllers,
-            onAddAnother: _addTeam2Player,
-          ),
-          const SizedBox(height: 20),
-          SizedBox(
-            height: 56,
-            child: ElevatedButton(
-              onPressed: _next,
-              child: const Text('Next: Set Rules →'),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: <Widget>[
+                _TeamSection(
+                  teamName: config.team1Name,
+                  controllers: _team1Controllers,
+                  onAddAnother: _addTeam1Player,
+                ),
+                const SizedBox(height: 20),
+                _TeamSection(
+                  teamName: config.team2Name,
+                  controllers: _team2Controllers,
+                  onAddAnother: _addTeam2Player,
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: _next,
+                    child: const Text('Next: Set Rules →'),
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -131,7 +138,13 @@ class _TeamSection extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Text(teamName, style: Theme.of(context).textTheme.titleMedium),
+             Text(
+               teamName,
+               style: Theme.of(context).textTheme.titleMedium,
+               overflow: TextOverflow.ellipsis,
+               maxLines: 1,
+               softWrap: false,
+             ),
             const SizedBox(height: 8),
             ...controllers.asMap().entries.map(
               (entry) => Padding(

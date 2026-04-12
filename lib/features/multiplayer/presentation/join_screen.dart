@@ -101,6 +101,7 @@ class _JoinScreenState extends ConsumerState<JoinScreen> with SingleTickerProvid
   Widget build(BuildContext context) {
     final client = ref.watch(clientServiceProvider);
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: const Text('Join as Viewer'),
         bottom: TabBar(
@@ -111,90 +112,103 @@ class _JoinScreenState extends ConsumerState<JoinScreen> with SingleTickerProvid
           ],
         ),
       ),
-      body: Stack(
-        children: <Widget>[
-          TabBarView(
-            controller: _tabController,
-            children: <Widget>[
-              Column(
-                children: <Widget>[
-                  Expanded(
-                    child: MobileScanner(
-                      onDetect: (capture) {
-                        if (capture.barcodes.isEmpty) return;
-                        final raw = capture.barcodes.first.rawValue;
-                        if (raw != null && raw.isNotEmpty) {
-                          _onQrDetected(raw);
-                        }
-                      },
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () => setState(() => _qrHandled = false),
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              child: SizedBox(
+                height: constraints.maxHeight,
+                child: Stack(
                   children: <Widget>[
-                    TextField(
-                      controller: _ipController,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      decoration: const InputDecoration(
-                        labelText: 'Host IP Address',
-                        hintText: '192.168.1.5',
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: _portController,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(labelText: 'Port'),
-                    ),
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: _connecting
-                            ? null
-                            : () => _connect(
-                                  ip: _ipController.text.trim(),
-                                  port: int.tryParse(_portController.text.trim()) ?? AppConstants.wsPort,
+                    TabBarView(
+                      controller: _tabController,
+                      children: <Widget>[
+                        Column(
+                          children: <Widget>[
+                            Expanded(
+                              child: MobileScanner(
+                                onDetect: (capture) {
+                                  if (capture.barcodes.isEmpty) return;
+                                  final raw = capture.barcodes.first.rawValue;
+                                  if (raw != null && raw.isNotEmpty) {
+                                    _onQrDetected(raw);
+                                  }
+                                },
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () => setState(() => _qrHandled = false),
+                              child: const Text('Retry'),
+                            ),
+                          ],
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              TextField(
+                                controller: _ipController,
+                                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                decoration: const InputDecoration(
+                                  labelText: 'Host IP Address',
+                                  hintText: '192.168.1.5',
                                 ),
-                        child: const Text('Connect'),
-                      ),
+                              ),
+                              const SizedBox(height: 12),
+                              TextField(
+                                controller: _portController,
+                                keyboardType: TextInputType.number,
+                                decoration: const InputDecoration(labelText: 'Port'),
+                              ),
+                              const SizedBox(height: 16),
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  onPressed: _connecting
+                                      ? null
+                                      : () => _connect(
+                                            ip: _ipController.text.trim(),
+                                            port:
+                                                int.tryParse(_portController.text.trim()) ??
+                                                AppConstants.wsPort,
+                                          ),
+                                  child: const Text('Connect'),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text('Connection status: ${client.isConnected ? 'Connected' : _status}'),
+                              if (_error != null) ...<Widget>[
+                                const SizedBox(height: 6),
+                                Text(_error!, style: const TextStyle(color: Colors.redAccent)),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 8),
-                    Text('Connection status: ${client.isConnected ? 'Connected' : _status}'),
-                    if (_error != null) ...<Widget>[
-                      const SizedBox(height: 6),
-                      Text(_error!, style: const TextStyle(color: Colors.redAccent)),
-                    ],
+                    if (_connecting)
+                      Positioned.fill(
+                        child: ColoredBox(
+                          color: Colors.black54,
+                          child: Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: <Widget>[
+                                const CircularProgressIndicator(),
+                                const SizedBox(height: 10),
+                                Text(_status),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),
-            ],
-          ),
-          if (_connecting)
-            Positioned.fill(
-              child: ColoredBox(
-                color: Colors.black54,
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: <Widget>[
-                      const CircularProgressIndicator(),
-                      const SizedBox(height: 10),
-                      Text(_status),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-        ],
+            );
+          },
+        ),
       ),
       bottomNavigationBar: const SafeArea(
         top: false,

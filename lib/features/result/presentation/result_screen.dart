@@ -104,59 +104,53 @@ class _ResultScreenState extends ConsumerState<ResultScreen> {
 
     return Scaffold(
       body: SafeArea(
-        child: Column(
-          children: <Widget>[
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: <Widget>[
-                    _WinBanner(match: match),
-                    const SizedBox(height: 12),
-                    _SummaryCard(match: match),
-                    const SizedBox(height: 12),
-                    _PotmCard(topScorer: topScorer, bestBowler: bestBowler),
-                    const SizedBox(height: 12),
-                    _ScorecardExpansion(match: match, innings: innings),
-                    const SizedBox(height: 16),
-                    if (!widget.readOnly) ...<Widget>[
-                      SizedBox(
-                        height: 52,
-                        child: ElevatedButton(
-                          onPressed: _startNewMatch,
-                          child: const Text('🏏 New Match'),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      SizedBox(
-                        height: 52,
-                        child: OutlinedButton(
-                          onPressed: () => _rematch(match),
-                          child: const Text('🔁 Rematch'),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      SizedBox(
-                        height: 52,
-                        child: OutlinedButton(
-                          onPressed: () => context.go('/'),
-                          child: const Text('🏠 Home'),
-                        ),
-                      ),
-                    ] else
-                      SizedBox(
-                        height: 52,
-                        child: OutlinedButton(
-                          onPressed: () => context.pop(),
-                          child: const Text('Back'),
-                        ),
-                      ),
-                  ],
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              _WinBanner(match: match),
+              const SizedBox(height: 12),
+              _SummaryCard(match: match),
+              const SizedBox(height: 12),
+              _PotmCard(topScorer: topScorer, bestBowler: bestBowler),
+              const SizedBox(height: 12),
+              _ScorecardExpansion(match: match, innings: innings),
+              const SizedBox(height: 16),
+              if (!widget.readOnly) ...<Widget>[
+                SizedBox(
+                  height: 52,
+                  child: ElevatedButton(
+                    onPressed: _startNewMatch,
+                    child: const Text('🏏 New Match'),
+                  ),
                 ),
-              ),
-            ),
-          ],
+                const SizedBox(height: 10),
+                SizedBox(
+                  height: 52,
+                  child: OutlinedButton(
+                    onPressed: () => _rematch(match),
+                    child: const Text('🔁 Rematch'),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  height: 52,
+                  child: OutlinedButton(
+                    onPressed: () => context.go('/'),
+                    child: const Text('🏠 Home'),
+                  ),
+                ),
+              ] else
+                SizedBox(
+                  height: 52,
+                  child: OutlinedButton(
+                    onPressed: () => context.pop(),
+                    child: const Text('Back'),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
       bottomNavigationBar: const SafeArea(top: false, child: BannerAdWidget()),
@@ -221,6 +215,9 @@ class _WinBanner extends StatelessWidget {
                     Text(
                       match.winnerTeamName ?? 'Match Tied',
                       textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      softWrap: false,
                       style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                             fontSize: 48,
                             color: AppColors.accentGold,
@@ -238,6 +235,7 @@ class _WinBanner extends StatelessWidget {
               ),
             ),
           ],
+        ),
         ).animate().shimmer(color: Colors.white24, duration: 1200.ms),
       ),
     );
@@ -345,6 +343,7 @@ class _ScorecardExpansion extends StatelessWidget {
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: DataTable(
+                  columnSpacing: 12,
                   headingRowHeight: 32,
                   dataRowMinHeight: 32,
                   dataRowMaxHeight: 40,
@@ -362,7 +361,14 @@ class _ScorecardExpansion extends StatelessWidget {
                       .map(
                         (p) => DataRow(
                           cells: <DataCell>[
-                            DataCell(Text(p.name)),
+                            DataCell(
+                              Text(
+                                p.name,
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                                softWrap: false,
+                              ),
+                            ),
                             DataCell(Text('${p.runsScored}')),
                             DataCell(Text('${p.ballsFaced}')),
                             DataCell(Text('${_boundaryCount(inn, p.id, 4)}')),
@@ -379,6 +385,7 @@ class _ScorecardExpansion extends StatelessWidget {
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: DataTable(
+                  columnSpacing: 12,
                   headingRowHeight: 32,
                   dataRowMinHeight: 32,
                   dataRowMaxHeight: 40,
@@ -397,7 +404,14 @@ class _ScorecardExpansion extends StatelessWidget {
                           final figures = _bowlerFigures(inn, match, p.id);
                           return DataRow(
                             cells: <DataCell>[
-                              DataCell(Text(p.name)),
+                              DataCell(
+                                Text(
+                                  p.name,
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                  softWrap: false,
+                                ),
+                              ),
                               DataCell(Text(figures.oversText)),
                               DataCell(Text('${figures.maidens}')),
                               DataCell(Text('${figures.runs}')),
@@ -426,12 +440,16 @@ String _oversText(Innings innings, int ballsPerOver) {
 Widget _summaryRow(BuildContext context, String teamName, String summary) {
   return Row(
     children: <Widget>[
-      Expanded(
+      Flexible(
         child: Text(
           teamName,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+          overflow: TextOverflow.ellipsis,
+          maxLines: 1,
+          softWrap: false,
         ),
       ),
+      const SizedBox(width: 8),
       Text(summary),
     ],
   );
