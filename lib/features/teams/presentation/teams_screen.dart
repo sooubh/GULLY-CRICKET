@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../storage/services/match_repository.dart';
 import '../domain/team_model.dart';
 import '../services/teams_service.dart';
+import '../../../shared/widgets/app_navigation_drawer.dart';
 
 class TeamsScreen extends ConsumerStatefulWidget {
   const TeamsScreen({super.key});
@@ -52,6 +53,10 @@ class _TeamsScreenState extends ConsumerState<TeamsScreen> {
       },
     );
 
+    if (!mounted) {
+      return;
+    }
+
     if (action == 'favorite') {
       await ref.read(teamsProvider.notifier).toggleFavorite(team.id);
       return;
@@ -85,9 +90,17 @@ class _TeamsScreenState extends ConsumerState<TeamsScreen> {
     final notifier = ref.read(teamsProvider.notifier);
 
     return Scaffold(
+      drawer: const AppNavigationDrawer(),
       appBar: AppBar(
+        leading: const AdaptiveBackOrMenuButton(),
         title: const Text('My Teams'),
         actions: <Widget>[
+          Builder(
+            builder: (context) => IconButton(
+              onPressed: () => Scaffold.of(context).openDrawer(),
+              icon: const Icon(Icons.menu),
+            ),
+          ),
           IconButton(
             onPressed: () => context.push('/teams/create'),
             icon: const Icon(Icons.add),

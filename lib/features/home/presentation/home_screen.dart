@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../ads/widgets/banner_ad_widget.dart';
 import '../../../shared/widgets/offline_mode_banner.dart';
+import '../../../shared/widgets/app_navigation_drawer.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -12,6 +13,8 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      drawer: const AppNavigationDrawer(),
+      appBar: AppBar(title: const Text('Gully Cricket')),
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) => SingleChildScrollView(
@@ -67,7 +70,7 @@ class HomeScreen extends StatelessWidget {
                 SizedBox(
                   height: 56,
                   child: ElevatedButton(
-                    onPressed: () => context.go('/setup'),
+                    onPressed: () => context.push('/setup'),
                     child: const Text('🏏 New Match'),
                   ),
                 )
@@ -78,7 +81,7 @@ class HomeScreen extends StatelessWidget {
                 SizedBox(
                   height: 56,
                   child: OutlinedButton(
-                    onPressed: () => context.go('/join'),
+                    onPressed: () => context.push('/join'),
                     child: const Text('📡 Join as Viewer'),
                   ),
                 )
@@ -92,7 +95,7 @@ class HomeScreen extends StatelessWidget {
                       child: SizedBox(
                         height: 46,
                         child: OutlinedButton(
-                          onPressed: () => context.go('/history'),
+                          onPressed: () => context.push('/history'),
                           child: const Text('📋 Match History'),
                         ),
                       ),
@@ -102,7 +105,7 @@ class HomeScreen extends StatelessWidget {
                       child: SizedBox(
                         height: 46,
                         child: OutlinedButton(
-                          onPressed: () => context.go('/teams'),
+                          onPressed: () => context.push('/teams'),
                           child: const Text('👥 Teams'),
                         ),
                       ),
@@ -117,14 +120,14 @@ class HomeScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
                     TextButton(
-                      onPressed: () => context.go('/players'),
+                      onPressed: () => context.push('/players'),
                       child: const Text('🏆 Player Stats'),
                     ),
                     const SizedBox(width: 4),
                     const Text('•'),
                     const SizedBox(width: 4),
                     TextButton(
-                      onPressed: () => context.go('/settings'),
+                      onPressed: () => context.push('/settings'),
                       child: const Text('⚙️ Settings'),
                     ),
                   ],

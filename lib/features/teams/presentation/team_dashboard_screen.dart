@@ -9,6 +9,7 @@ import '../../../core/constants/match_status.dart';
 import '../../scoring/domain/models/innings_model.dart';
 import '../../scoring/domain/models/match_model.dart';
 import '../../storage/services/match_repository.dart';
+import '../../../shared/widgets/app_navigation_drawer.dart';
 import '../domain/team_model.dart';
 import '../services/teams_service.dart';
 
@@ -55,7 +56,19 @@ class TeamDashboardScreen extends ConsumerWidget {
         : _headToHead(related, teamName, mostPlayedOpponent);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Team Dashboard')),
+      drawer: const AppNavigationDrawer(),
+      appBar: AppBar(
+        leading: const AdaptiveBackOrMenuButton(),
+        title: const Text('Team Dashboard'),
+        actions: <Widget>[
+          Builder(
+            builder: (context) => IconButton(
+              onPressed: () => Scaffold.of(context).openDrawer(),
+              icon: const Icon(Icons.menu),
+            ),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
@@ -165,16 +178,27 @@ class _QuickStats extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: <Widget>[
-        Expanded(child: _StatCard(title: 'Matches', value: '$matches')),
-        const SizedBox(width: 8),
-        Expanded(child: _StatCard(title: 'Wins', value: '$wins')),
-        const SizedBox(width: 8),
-        Expanded(child: _StatCard(title: 'Avg Score', value: avgScore.toStringAsFixed(1))),
-        const SizedBox(width: 8),
-        Expanded(child: _StatCard(title: 'Highest', value: '$highestScore')),
-      ],
+    final statCards = <Widget>[
+      _StatCard(title: 'Matches', value: '$matches'),
+      _StatCard(title: 'Wins', value: '$wins'),
+      _StatCard(title: 'Avg Score', value: avgScore.toStringAsFixed(1)),
+      _StatCard(title: 'Highest', value: '$highestScore'),
+    ];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = constraints.maxWidth < 560 ? 2 : 4;
+        const spacing = 8.0;
+        final itemWidth = (constraints.maxWidth - ((columns - 1) * spacing)) / columns;
+
+        return Wrap(
+          spacing: spacing,
+          runSpacing: spacing,
+          children: statCards
+              .map((card) => SizedBox(width: itemWidth, child: card))
+              .toList(growable: false),
+        );
+      },
     );
   }
 }

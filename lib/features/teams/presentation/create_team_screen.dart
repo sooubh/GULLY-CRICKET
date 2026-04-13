@@ -128,7 +128,11 @@ class _CreateTeamScreenState extends ConsumerState<CreateTeamScreen> {
       return;
     }
     if (mounted) {
-      context.go('/teams');
+      if (context.canPop()) {
+        context.pop();
+      } else {
+        context.go('/teams');
+      }
     }
   }
 

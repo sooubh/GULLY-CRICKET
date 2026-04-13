@@ -286,7 +286,7 @@ class StatsCalculator {
         cumulativeLegalBalls += over.legalBallCount;
 
         final runRate = cumulativeLegalBalls == 0
-            ? 0
+            ? 0.0
             : (cumulativeRuns / cumulativeLegalBalls) * match.rules.ballsPerOver;
         runRateChart.add(
           OverRunRatePoint(
