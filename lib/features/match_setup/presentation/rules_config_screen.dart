@@ -129,10 +129,10 @@ class _RulesConfigScreenState extends ConsumerState<RulesConfigScreen> {
 
     if (updated.enableMultiplayer) {
       await ref.read(hostServiceProvider).startServer(match);
-      if (mounted) context.go('/host');
+      if (mounted) context.push('/host');
       return;
     }
-    if (mounted) context.go('/live');
+    if (mounted) context.push('/live');
   }
 
   @override

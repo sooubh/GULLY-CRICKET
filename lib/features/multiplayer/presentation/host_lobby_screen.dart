@@ -156,7 +156,7 @@ class _HostLobbyScreenState extends ConsumerState<HostLobbyScreen> {
                             height: 56,
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryGreen),
-                              onPressed: () => context.go('/live'),
+                              onPressed: () => context.push('/live'),
                               child: const Text('▶ Start Scoring'),
                             ),
                           ),

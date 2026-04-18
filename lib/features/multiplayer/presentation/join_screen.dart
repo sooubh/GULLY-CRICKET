@@ -62,7 +62,7 @@ class _JoinScreenState extends ConsumerState<JoinScreen> with SingleTickerProvid
         _connecting = false;
         _status = 'Connected';
       });
-      context.go('/spectator');
+      context.push('/spectator');
     } catch (_) {
       if (!mounted) return;
       setState(() {
