@@ -403,9 +403,9 @@ class _TeamSquadCard extends StatelessWidget {
                   color: Colors.green.withOpacity(0.18),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Text(
+                child: Text(
                   'Squad complete!',
-                  style: TextStyle(color: Color(0xFF66BB6A), fontWeight: FontWeight.w600),
+                  style: TextStyle(color: Colors.green.shade700, fontWeight: FontWeight.w600),
                 ),
               ),
             const SizedBox(height: 8),

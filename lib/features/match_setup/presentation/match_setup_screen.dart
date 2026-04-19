@@ -33,29 +33,29 @@ class _MatchSetupScreenState extends ConsumerState<MatchSetupScreen> {
   void initState() {
     super.initState();
     final config = ref.read(matchSetupProvider);
-    final team1Text = config.team1Name;
-    final team2Text = config.team2Name;
-    final team1Lookup = team1Text.trim().toLowerCase();
-    final team2Lookup = team2Text.trim().toLowerCase();
-    _team1Controller = TextEditingController(text: team1Text);
-    _team2Controller = TextEditingController(text: team2Text);
+    final team1Lookup = config.team1Name.trim().toLowerCase();
+    final team2Lookup = config.team2Name.trim().toLowerCase();
+    String? resolvedTeam1Name;
+    String? resolvedTeam2Name;
     final teams = ref.read(teamsProvider);
     for (final team in teams) {
       if (team.name.trim().toLowerCase() == team1Lookup) {
         _team1SavedId = team.id;
+        resolvedTeam1Name = team.name;
         _team1PresetPlayers = team.playerNames.where((name) => name.trim().isNotEmpty).toList();
       }
       if (team.name.trim().toLowerCase() == team2Lookup) {
         _team2SavedId = team.id;
+        resolvedTeam2Name = team.name;
         _team2PresetPlayers = team.playerNames.where((name) => name.trim().isNotEmpty).toList();
       }
     }
-    if (_team1SavedId == null && team1Lookup == _defaultTeamAName.toLowerCase()) {
-      _team1Controller.text = '';
-    }
-    if (_team2SavedId == null && team2Lookup == _defaultTeamBName.toLowerCase()) {
-      _team2Controller.text = '';
-    }
+    final team1Initial = resolvedTeam1Name ??
+        (team1Lookup == _defaultTeamAName.toLowerCase() ? '' : config.team1Name);
+    final team2Initial = resolvedTeam2Name ??
+        (team2Lookup == _defaultTeamBName.toLowerCase() ? '' : config.team2Name);
+    _team1Controller = TextEditingController(text: team1Initial);
+    _team2Controller = TextEditingController(text: team2Initial);
     _totalOvers = config.totalOvers;
     _ballsPerOver = config.ballsPerOver;
     _team1PlayerCount = config.team1PlayerCount;
@@ -178,14 +178,13 @@ class _MatchSetupScreenState extends ConsumerState<MatchSetupScreen> {
                             final playerCount = team.playerNames
                                 .where((name) => name.trim().isNotEmpty)
                                 .length;
-                            return AnimatedContainer(
-                              duration: const Duration(milliseconds: 180),
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(12),
-                                  color: isDisabled
-                                      ? Theme.of(context).disabledColor.withOpacity(0.12)
-                                      : null,
-                                ),
+                            return Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12),
+                                color: isDisabled
+                                    ? Theme.of(context).disabledColor.withOpacity(0.12)
+                                    : null,
+                              ),
                               child: ListTile(
                                 minVerticalPadding: 12,
                                 enabled: !isDisabled,
