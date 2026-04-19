@@ -33,15 +33,17 @@ class _MatchSetupScreenState extends ConsumerState<MatchSetupScreen> {
     final config = ref.read(matchSetupProvider);
     final team1Text = config.team1Name;
     final team2Text = config.team2Name;
+    final team1Lookup = team1Text.trim().toLowerCase();
+    final team2Lookup = team2Text.trim().toLowerCase();
     _team1Controller = TextEditingController(text: team1Text);
     _team2Controller = TextEditingController(text: team2Text);
     final teams = ref.read(teamsProvider);
     for (final team in teams) {
-      if (team.name == team1Text) {
+      if (team.name.trim().toLowerCase() == team1Lookup) {
         _team1SavedId = team.id;
         _team1PresetPlayers = team.playerNames.where((name) => name.trim().isNotEmpty).toList();
       }
-      if (team.name == team2Text) {
+      if (team.name.trim().toLowerCase() == team2Lookup) {
         _team2SavedId = team.id;
         _team2PresetPlayers = team.playerNames.where((name) => name.trim().isNotEmpty).toList();
       }

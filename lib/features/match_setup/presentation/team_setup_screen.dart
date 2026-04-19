@@ -61,11 +61,15 @@ class _TeamSetupScreenState extends ConsumerState<TeamSetupScreen> {
 
   Set<String> _deriveInitialSelection(List<String> preferred, List<String> squad) {
     final selected = <String>{};
+    final squadLookup = <String, String>{
+      for (final name in squad) name.toLowerCase(): name,
+    };
     for (final player in preferred) {
       final trimmed = player.trim();
       if (trimmed.isEmpty) continue;
-      if (squad.contains(trimmed)) {
-        selected.add(trimmed);
+      final matched = squadLookup[trimmed.toLowerCase()];
+      if (matched != null) {
+        selected.add(matched);
       }
       if (selected.length == _maxSelectedPlayers) {
         return selected;
@@ -122,13 +126,14 @@ class _TeamSetupScreenState extends ConsumerState<TeamSetupScreen> {
   }) async {
     final trimmed = playerName.trim();
     if (trimmed.isEmpty) return false;
+    final lookup = trimmed.toLowerCase();
     final teamsNotifier = ref.read(teamsProvider.notifier);
     final teams = ref.read(teamsProvider);
     final team = _findTeamByName(teamName, teams);
     if (team == null) return false;
 
     final current = _sanitizePlayers(team.playerNames);
-    final exists = current.any((name) => name.toLowerCase() == trimmed.toLowerCase());
+    final exists = current.any((name) => name.toLowerCase() == lookup);
     if (exists) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -192,9 +197,10 @@ class _TeamSetupScreenState extends ConsumerState<TeamSetupScreen> {
     final teams = ref.read(teamsProvider);
     final team = _findTeamByName(teamName, teams);
     if (team == null) return false;
+    final lookup = playerName.toLowerCase();
 
     final updatedRoster = _sanitizePlayers(team.playerNames)
-        .where((name) => name.toLowerCase() != playerName.toLowerCase())
+        .where((name) => name.toLowerCase() != lookup)
         .toList();
     final updated = team.copyWith(playerNames: updatedRoster);
     final saved = await teamsNotifier.saveTeam(updated);
@@ -202,11 +208,11 @@ class _TeamSetupScreenState extends ConsumerState<TeamSetupScreen> {
 
     setState(() {
       if (isTeam1) {
-        _team1Squad.removeWhere((name) => name.toLowerCase() == playerName.toLowerCase());
-        _team1Selected.removeWhere((name) => name.toLowerCase() == playerName.toLowerCase());
+        _team1Squad.removeWhere((name) => name.toLowerCase() == lookup);
+        _team1Selected.removeWhere((name) => name.toLowerCase() == lookup);
       } else {
-        _team2Squad.removeWhere((name) => name.toLowerCase() == playerName.toLowerCase());
-        _team2Selected.removeWhere((name) => name.toLowerCase() == playerName.toLowerCase());
+        _team2Squad.removeWhere((name) => name.toLowerCase() == lookup);
+        _team2Selected.removeWhere((name) => name.toLowerCase() == lookup);
       }
     });
     return true;
