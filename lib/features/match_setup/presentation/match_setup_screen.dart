@@ -15,6 +15,8 @@ class MatchSetupScreen extends ConsumerStatefulWidget {
 }
 
 class _MatchSetupScreenState extends ConsumerState<MatchSetupScreen> {
+  static const String _defaultTeamAName = 'Team A';
+  static const String _defaultTeamBName = 'Team B';
   late final TextEditingController _team1Controller;
   late final TextEditingController _team2Controller;
   late int _totalOvers;
@@ -31,8 +33,8 @@ class _MatchSetupScreenState extends ConsumerState<MatchSetupScreen> {
   void initState() {
     super.initState();
     final config = ref.read(matchSetupProvider);
-    final team1Text = config.team1Name == 'Team A' ? '' : config.team1Name;
-    final team2Text = config.team2Name == 'Team B' ? '' : config.team2Name;
+    final team1Text = config.team1Name == _defaultTeamAName ? '' : config.team1Name;
+    final team2Text = config.team2Name == _defaultTeamBName ? '' : config.team2Name;
     _team1Controller = TextEditingController(text: team1Text);
     _team2Controller = TextEditingController(text: team2Text);
     final teams = ref.read(teamsProvider);
@@ -206,10 +208,16 @@ class _MatchSetupScreenState extends ConsumerState<MatchSetupScreen> {
                 ListTile(
                   minVerticalPadding: 12,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 4),
-                  leading: const Icon(Icons.add_circle_outline, color: Colors.greenAccent),
-                  title: const Text(
+                  leading: Icon(
+                    Icons.add_circle_outline,
+                    color: Colors.green.shade400,
+                  ),
+                  title: Text(
                     '➕ Create New Team',
-                    style: TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                      color: Colors.green.shade400,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   onTap: () {
                     Navigator.of(sheetContext).pop();

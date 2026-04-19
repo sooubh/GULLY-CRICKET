@@ -31,13 +31,6 @@ class _TeamSetupScreenState extends ConsumerState<TeamSetupScreen> {
     _team1Squad = _sanitizePlayers(team1Model?.playerNames ?? config.team1Players);
     _team2Squad = _sanitizePlayers(team2Model?.playerNames ?? config.team2Players);
 
-    if (_team1Squad.isEmpty) {
-      _team1Squad = <String>[];
-    }
-    if (_team2Squad.isEmpty) {
-      _team2Squad = <String>[];
-    }
-
     _team1Selected = _deriveInitialSelection(config.team1Players, _team1Squad);
     _team2Selected = _deriveInitialSelection(config.team2Players, _team2Squad);
   }
@@ -392,7 +385,7 @@ class _TeamSquadCard extends StatelessWidget {
                     '${selected.length} / 15 selected',
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
-                      color: isComplete ? Colors.greenAccent : null,
+                      color: isComplete ? Colors.green.shade300 : null,
                     ),
                   ),
                 ),
@@ -409,7 +402,7 @@ class _TeamSquadCard extends StatelessWidget {
                 ),
                 child: const Text(
                   'Squad complete! ✅',
-                  style: TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.w600),
+                  style: TextStyle(color: Color(0xFF66BB6A), fontWeight: FontWeight.w600),
                 ),
               ),
             const SizedBox(height: 8),
