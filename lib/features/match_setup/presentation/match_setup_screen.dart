@@ -15,8 +15,6 @@ class MatchSetupScreen extends ConsumerStatefulWidget {
 }
 
 class _MatchSetupScreenState extends ConsumerState<MatchSetupScreen> {
-  static const String _defaultTeamAName = 'Team A';
-  static const String _defaultTeamBName = 'Team B';
   late final TextEditingController _team1Controller;
   late final TextEditingController _team2Controller;
   late int _totalOvers;
@@ -33,8 +31,8 @@ class _MatchSetupScreenState extends ConsumerState<MatchSetupScreen> {
   void initState() {
     super.initState();
     final config = ref.read(matchSetupProvider);
-    final team1Text = config.team1Name == _defaultTeamAName ? '' : config.team1Name;
-    final team2Text = config.team2Name == _defaultTeamBName ? '' : config.team2Name;
+    final team1Text = config.team1Name;
+    final team2Text = config.team2Name;
     _team1Controller = TextEditingController(text: team1Text);
     _team2Controller = TextEditingController(text: team2Text);
     final teams = ref.read(teamsProvider);
@@ -47,6 +45,12 @@ class _MatchSetupScreenState extends ConsumerState<MatchSetupScreen> {
         _team2SavedId = team.id;
         _team2PresetPlayers = team.playerNames.where((name) => name.trim().isNotEmpty).toList();
       }
+    }
+    if (_team1SavedId == null) {
+      _team1Controller.text = '';
+    }
+    if (_team2SavedId == null) {
+      _team2Controller.text = '';
     }
     _totalOvers = config.totalOvers;
     _ballsPerOver = config.ballsPerOver;
@@ -213,7 +217,7 @@ class _MatchSetupScreenState extends ConsumerState<MatchSetupScreen> {
                     color: Colors.green.shade400,
                   ),
                   title: Text(
-                    '➕ Create New Team',
+                    'Create New Team',
                     style: TextStyle(
                       color: Colors.green.shade400,
                       fontWeight: FontWeight.w600,

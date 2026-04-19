@@ -385,7 +385,7 @@ class _TeamSquadCard extends StatelessWidget {
                     '${selected.length} / 15 selected',
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
-                      color: isComplete ? Colors.green.shade300 : null,
+                      color: isComplete ? Colors.green.shade700 : null,
                     ),
                   ),
                 ),
@@ -401,7 +401,7 @@ class _TeamSquadCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Text(
-                  'Squad complete! ✅',
+                  'Squad complete!',
                   style: TextStyle(color: Color(0xFF66BB6A), fontWeight: FontWeight.w600),
                 ),
               ),
@@ -449,7 +449,7 @@ class _TeamSquadCard extends StatelessWidget {
               child: OutlinedButton.icon(
                 onPressed: onAddNew,
                 icon: const Icon(Icons.add_circle_outline),
-                label: const Text('➕ Add New Player'),
+                label: const Text('Add New Player'),
               ),
             ),
           ],
