@@ -4,8 +4,6 @@ import 'package:hive_flutter/hive_flutter.dart';
 
 import '../../../core/constants/hive_keys.dart';
 import '../../audio/sound_service.dart';
-import '../../overlay/overlay_service.dart';
-import '../../scoring/presentation/active_match_provider.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -16,14 +14,12 @@ class SettingsScreen extends ConsumerStatefulWidget {
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   late bool _notifEnabled;
-  late bool _overlayEnabled;
 
   @override
   void initState() {
     super.initState();
     final settings = Hive.box<dynamic>(HiveKeys.settingsBox);
     _notifEnabled = (settings.get(HiveKeys.notifEnabled, defaultValue: true) as bool?) ?? true;
-    _overlayEnabled = (settings.get(HiveKeys.overlayEnabled, defaultValue: false) as bool?) ?? false;
   }
 
   Future<void> _saveBool(String key, bool value) async {
@@ -48,18 +44,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             onChanged: (value) async {
               setState(() => _notifEnabled = value);
               await _saveBool(HiveKeys.notifEnabled, value);
-            },
-          ),
-          SwitchListTile(
-            title: const Text('Floating Overlay'),
-            value: _overlayEnabled,
-            onChanged: (value) async {
-              setState(() => _overlayEnabled = value);
-              await _saveBool(HiveKeys.overlayEnabled, value);
-              if (!value) {
-                await OverlayService.closeOverlay();
-                ref.read(overlayActiveProvider.notifier).state = false;
-              }
             },
           ),
         ],

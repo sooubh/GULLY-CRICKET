@@ -1,10 +1,33 @@
 import java.io.FileInputStream
 import java.util.Properties
+import org.gradle.api.GradleException
 
 val keystoreProperties = Properties()
 val keystorePropertiesFile = rootProject.file("key.properties")
 if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+}
+
+val requiredKeystoreKeys = listOf("keyAlias", "keyPassword", "storeFile", "storePassword")
+val missingKeystoreKeys = requiredKeystoreKeys.filter {
+    keystoreProperties.getProperty(it).isNullOrBlank()
+}
+val hasReleaseKeystore = keystorePropertiesFile.exists() && missingKeystoreKeys.isEmpty()
+val isReleaseTaskRequested = gradle.startParameter.taskNames.any {
+    it.contains("release", ignoreCase = true)
+}
+
+if (keystorePropertiesFile.exists() && !hasReleaseKeystore) {
+    throw GradleException(
+        "android/key.properties is missing required values: ${missingKeystoreKeys.joinToString(", ")}" +
+            ". Please provide all of keyAlias, keyPassword, storeFile, and storePassword."
+    )
+}
+
+if (isReleaseTaskRequested && !hasReleaseKeystore) {
+    throw GradleException(
+        "Release signing is not configured. Create android/key.properties and android/app/upload-keystore.jks for Play Store builds."
+    )
 }
 
 plugins {
@@ -16,7 +39,7 @@ plugins {
 
 android {
     namespace = "com.sooubh.gullycricket"
-    compileSdk = 36
+    compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -35,25 +58,29 @@ android {
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
-        targetSdk = 36
+        targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
 
     signingConfigs {
-        create("release") {
-            if (keystorePropertiesFile.exists()) {
-                keyAlias = keystoreProperties["keyAlias"] as String
-                keyPassword = keystoreProperties["keyPassword"] as String
-                storeFile = file(keystoreProperties["storeFile"] as String)
-                storePassword = keystoreProperties["storePassword"] as String
+        if (hasReleaseKeystore) {
+            create("release") {
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+                storeFile = file(keystoreProperties.getProperty("storeFile"))
+                storePassword = keystoreProperties.getProperty("storePassword")
             }
         }
     }
 
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("release")
+            signingConfig = if (hasReleaseKeystore) {
+                signingConfigs.getByName("release")
+            } else {
+                signingConfigs.getByName("debug")
+            }
         }
     }
 }
