@@ -68,7 +68,14 @@ android {
             create("release") {
                 keyAlias = keystoreProperties.getProperty("keyAlias")
                 keyPassword = keystoreProperties.getProperty("keyPassword")
-                storeFile = file(keystoreProperties.getProperty("storeFile"))
+                val storeFilePath = keystoreProperties.getProperty("storeFile")
+                // Prefer android/ relative paths from key.properties, then fall back to app/ relative paths.
+                val rootRelativeStoreFile = rootProject.file(storeFilePath)
+                storeFile = if (rootRelativeStoreFile.exists()) {
+                    rootRelativeStoreFile
+                } else {
+                    file(storeFilePath)
+                }
                 storePassword = keystoreProperties.getProperty("storePassword")
             }
         }
